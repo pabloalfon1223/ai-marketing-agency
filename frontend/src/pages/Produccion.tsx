@@ -171,7 +171,7 @@ export default function Produccion() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.alertas5Dias}</div>
-            <p className="text-xs text-gray-600">Sin actualizar >5 días</p>
+            <p className="text-xs text-gray-600">Sin actualizar &gt;5 días</p>
           </CardContent>
         </Card>
       </div>
@@ -183,11 +183,11 @@ export default function Produccion() {
           <Input
             placeholder="Buscar por cliente o celular..."
             value={searchCliente}
-            onChange={(e) => setSearchCliente(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchCliente(e.target.value)}
             className="pl-8"
           />
         </div>
-        <Select value={filterEstado || ''} onValueChange={(v) => setFilterEstado(v || undefined)}>
+        <Select value={filterEstado || ''} onValueChange={(v: string) => setFilterEstado(v || undefined)}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>

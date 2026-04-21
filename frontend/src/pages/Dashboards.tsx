@@ -139,7 +139,7 @@ export default function Dashboards() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{produccionResumen?.alertas_sin_actualizar || 0}</div>
-            <p className="text-xs text-gray-600 mt-2">Sin actualizar >5 días</p>
+            <p className="text-xs text-gray-600 mt-2">Sin actualizar &gt;5 días</p>
           </CardContent>
         </Card>
       </div>
@@ -286,7 +286,7 @@ export default function Dashboards() {
             </div>
 
             <div className="space-y-2 p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-gray-600">Alertas >5 días</p>
+              <p className="text-sm text-gray-600">Alertas &gt;5 días</p>
               <p className="text-2xl font-bold text-red-700">
                 {produccionResumen.alertas_sin_actualizar || 0}
               </p>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || '');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
 export const MentePausadaLanding: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<'basic' | 'plus' | 'vip'>('plus');
@@ -68,6 +68,7 @@ export const MentePausadaLanding: React.FC = () => {
 
       const { sessionId } = await response.json();
       const stripe = await stripePromise;
+      // @ts-ignore - redirectToCheckout is deprecated but still available
       await stripe?.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Error:', error);
@@ -138,7 +139,7 @@ export const MentePausadaLanding: React.FC = () => {
               }`}
               style={{
                 backgroundColor: tier.popular ? '#A8B5A0' : '#F5F0E8',
-                ringColor: '#7D8B75'
+                borderColor: tier.popular ? '#7D8B75' : 'transparent'
               }}
             >
               {tier.popular && (

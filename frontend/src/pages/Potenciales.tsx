@@ -194,11 +194,11 @@ export default function Potenciales() {
           <Input
             placeholder="Buscar por nombre o celular..."
             value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchName(e.target.value)}
             className="pl-8"
           />
         </div>
-        <Select value={filterEstado || ''} onValueChange={(v) => setFilterEstado(v || undefined)}>
+        <Select value={filterEstado || ''} onValueChange={(v: string) => setFilterEstado(v || undefined)}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
@@ -209,7 +209,7 @@ export default function Potenciales() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterPrioridad || ''} onValueChange={(v) => setFilterPrioridad(v || undefined)}>
+        <Select value={filterPrioridad || ''} onValueChange={(v: string) => setFilterPrioridad(v || undefined)}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por prioridad" />
           </SelectTrigger>
