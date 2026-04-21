@@ -1,0 +1,33 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 5
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": {
+      "description": "Tu clave API de Anthropic (sk-ant-...)",
+      "value": ""
+    },
+    "CORS_ORIGINS": {
+      "description": "URLs permitidas para CORS",
+      "value": "https://ai-marketing-agency.vercel.app,http://localhost:5173"
+    },
+    "GOOGLE_SHEETS_ID": {
+      "description": "ID de tu Google Sheet de Polt Mobilier",
+      "value": ""
+    },
+    "GOOGLE_CREDENTIALS_JSON": {
+      "description": "Credenciales de Google en formato JSON (de una línea)",
+      "value": ""
+    },
+    "GMAIL_ENABLED": {
+      "description": "Habilitar notificaciones por Gmail",
+      "value": "false"
+    }
+  }
+}
