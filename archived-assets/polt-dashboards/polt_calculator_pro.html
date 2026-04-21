@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLT — Presupuestos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1D1D1D;
+            --bg-secondary: #2D2D2D;
+            --bg-tertiary: #3A3A3A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A1A1A1;
+            --accent: #0071E3;
+            --accent-alt: #34C759;
+            --danger: #FF3B30;
+            --input-bg: #2D2D2D;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--bg-tertiary);
+            padding: 32px 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent) 0%, #0051BA 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid var(--bg-tertiary);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--bg-tertiary);
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            padding-bottom: 16px;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -17px;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* CARDS */
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #4A4A4A;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* FORM ELEMENTS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0061CC;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4A4A4A;
+        }
+
+        .btn-success {
+            background-color: var(--accent-alt);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #2AC74B;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background-color: #FF2B23;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        /* IMAGE UPLOAD */
+        .upload-area {
+            border: 2px dashed var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background-color: rgba(0, 113, 227, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .image-preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        /* ANALYSIS SECTION */
+        .analysis-box {
+            background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, rgba(52, 199, 89, 0.1) 100%);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .analysis-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analysis-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .material-suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .material-pill {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .material-pill:hover {
+            border-color: var(--accent);
+            background-color: rgba(0, 113, 227, 0.1);
+        }
+
+        .material-pill.selected {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* COMPONENTS TABLE */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table thead {
+            background-color: var(--bg-tertiary);
+        }
+
+        table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        table td {
+            padding: 12px 16px;
+            border-top: 1px solid var(--bg-tertiary);
+        }
+
+        table input {
+            background-color: var(--input-bg);
+            border: 1px solid var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        table input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* RESULTS */
+        .result-card {
+            background: linear-gradient(135deg, var(--accent) 0%, #0051BA 100%);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .result-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .result-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .result-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 12px;
+        }
+
+        .result-item {
+            text-align: center;
+        }
+
+        .result-item-label {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+
+        .result-item-value {
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* LAYOUT GRID */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .content-wrapper {
+                padding: 24px;
+            }
+
+            .result-value {
+                font-size: 36px;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5A5A5A;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.3);
+            color: var(--accent-alt);
+        }
+
+        .alert-info {
+            background: rgba(0, 113, 227, 0.1);
+            border: 1px solid rgba(0, 113, 227, 0.3);
+            color: var(--accent);
+        }
+
+        /* WHATSAPP BUTTON */
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #1AAC5F 100%);
+            color: white;
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px 24px;
+            font-size: 15px;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+        }
+
+        .history-item {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-item-type {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 14px;
+        }
+
+        .history-item-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-item-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-alt);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📦</div>
+                <span>POLT</span>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Principal</div>
+                <div class="nav-item active" onclick="switchTab('calculator')">
+                    <span>🧮 Calculadora</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('history')">
+                    <span>📋 Historial</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    <strong>Versión Pro</strong><br>
+                    Sistema de presupuestos inteligente
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="header">
+                <h1>Sistema de Presupuestos</h1>
+                <div style="font-size: 28px;">✨</div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content-wrapper">
+                <!-- CALCULATOR TAB -->
+                <div id="calculator" class="tab-content active">
+                    <div class="grid-2col">
+                        <!-- LEFT: IMAGE & ANALYSIS -->
+                        <div>
+                            <!-- IMAGE UPLOAD -->
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">📸</div>
+                                    <span>Render del Mueble</span>
+                                </div>
+                                <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                                    <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="previewImage(event)">
+                                    <div class="upload-icon">⬆️</div>
+                                    <div class="upload-text">Sube una foto o render del mueble</div>
+                                </div>
+                                <img id="previewImage" class="image-preview" style="display:none;">
+                            </div>
+
+                            <!-- DIMENSIONS -->
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">📐</div>
+                                    <span>Dimensiones Generales</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Alto (cm)</label>
+                                    <input type="number" class="form-input" id="dimAlto" value="240" onchange="analyzeImage()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Ancho (cm)</label>
+                                    <input type="number" class="form-input" id="dimAncho" value="80" onchange="analyzeImage()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Profundidad (cm)</label>
+                                    <input type="number" class="form-input" id="dimProfundidad" value="45" onchange="analyzeImage()">
+                                </div>
+                                <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="analyzeImage()">
+                                    🔍 Analizar Mueble
+                                </button>
+                            </div>
+
+                            <!-- ANALYSIS -->
+                            <div id="analysisSection" style="display:none;">
+                                <div class="analysis-box">
+                                    <div class="analysis-title">Análisis Inteligente</div>
+                                    <div class="analysis-text" id="analysisText"></div>
+                                    <div class="analysis-title" style="margin-top: 20px;">Material Sugerido</div>
+                                    <div class="material-suggestions" id="materialSuggestions"></div>
+                                </div>
+                            </div>
+
+                            <!-- TYPE & MATERIAL -->
+                            <div class="card" style="margin-top: 24px;">
+                                <div class="card-title">
+                                    <div class="card-title-icon">🪑</div>
+                                    <span>Tipo de Mueble</span>
+                                </div>
+                                <select class="form-select" id="furnitureType" onchange="changeFurnitureType()">
+                                    <option value="placard">Placard</option>
+                                    <option value="biblioteca">Biblioteca</option>
+                                    <option value="escritorio">Escritorio</option>
+                                    <option value="tv_unit">Unidad TV</option>
+                                    <option value="estantes">Estantes Flotantes</option>
+                                    <option value="mueble_cocina">Mueble de Cocina</option>
+                                </select>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">🎨</div>
+                                    <span>Material</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Selecciona Material</label>
+                                    <select class="form-select" id="material" onchange="updateCalculations()">
+                                        <option value="melamina_blanca">Melamina Blanca</option>
+                                        <option value="melamina_nogal">Melamina Nogal</option>
+                                        <option value="melamina_roble">Melamina Roble</option>
+                                        <option value="mdf_premium">MDF Premium</option>
+                                        <option value="pino_macizo">Pino Macizo</option>
+                                        <option value="rauli_macizo">Raulí Macizo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Costo por Placa (ARS)</label>
+                                    <input type="number" class="form-input" id="costPerPlate" value="5000" onchange="updateCalculations()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: COMPONENTS & RESULTS -->
+                        <div>
+                            <!-- PARAMETERS -->
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">⚙️</div>
+                                    <span>Parámetros</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Desperdicio (%)</label>
+                                    <input type="number" class="form-input" id="wastePercent" value="20" min="0" max="50" onchange="updateCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Multiplicador Laqueado</label>
+                                    <input type="number" class="form-input" id="laqueadoMult" value="1.0" step="0.1" min="1" onchange="updateCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Multiplicador Mano de Obra</label>
+                                    <input type="number" class="form-input" id="laborMult" value="2.5" step="0.1" min="1" onchange="updateCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Multiplicador Complejidad</label>
+                                    <input type="number" class="form-input" id="complexityMult" value="1.0" step="0.1" min="1" onchange="updateCalculations()">
+                                </div>
+                            </div>
+
+                            <!-- COMPONENTS -->
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">📦</div>
+                                    <div style="flex: 1;">Componentes</div>
+                                    <button class="btn btn-success btn-small" onclick="addComponent()">+ Agregar</button>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Componente</th>
+                                                <th>Cant</th>
+                                                <th>Largo</th>
+                                                <th>Alto</th>
+                                                <th>Prof</th>
+                                                <th>m²</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="componentsTable"></tbody>
+                                    </table>
+                                </div>
+                                <div style="margin-top: 16px; padding: 12px 16px; background-color: var(--bg-tertiary); border-radius: 8px; display: flex; justify-content: space-between;">
+                                    <span>Área Total</span>
+                                    <span style="font-weight: 600; color: var(--accent);"><span id="totalArea">0.00</span> m²</span>
+                                </div>
+                            </div>
+
+                            <!-- DESGLOSE -->
+                            <div class="card">
+                                <div class="card-title">
+                                    <div class="card-title-icon">📊</div>
+                                    <span>Desglose</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                                    <div>
+                                        <div style="color: var(--text-secondary); margin-bottom: 4px;">Área</div>
+                                        <div style="font-weight: 600; font-size: 16px;"><span id="calcArea">0.00</span> m²</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--text-secondary); margin-bottom: 4px;">Desperdicio</div>
+                                        <div style="font-weight: 600; font-size: 16px;">+<span id="calcWaste">0.00</span> m²</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--text-secondary); margin-bottom: 4px;">Total</div>
+                                        <div style="font-weight: 600; font-size: 16px;"><span id="calcTotal">0.00</span> m²</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--text-secondary); margin-bottom: 4px;">Placas</div>
+                                        <div style="font-weight: 600; font-size: 16px; color: var(--accent-alt);"><span id="platesNeeded">0</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RESULT -->
+                            <div class="result-card">
+                                <div class="result-label">Presupuesto Final</div>
+                                <div class="result-value">$<span id="finalBudget">0</span></div>
+                                <div class="result-breakdown">
+                                    <div class="result-item">
+                                        <div class="result-item-label">Material</div>
+                                        <div class="result-item-value">$<span id="materialCost">0</span></div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-item-label">Multiplicadores</div>
+                                        <div class="result-item-value"><span id="showMultipliers">6.5x</span></div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-whatsapp" onclick="copyToWhatsApp()">
+                                    📱 Copiar para WhatsApp
+                                </button>
+                                <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" onclick="saveToHistory()">
+                                    💾 Guardar Presupuesto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY TAB -->
+                <div id="history" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">
+                            <div class="card-title-icon">📋</div>
+                            <span>Historial de Presupuestos</span>
+                        </div>
+                        <div id="historyContainer">
+                            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                                No hay presupuestos guardados aún
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" style="width: 100%; margin-top: 16px;" onclick="clearHistory()">
+                            🗑️ Limpiar Historial
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PLATE_SIZE = 4.46;
+
+        const furnitureTemplates = {
+            placard: [
+                { name: 'Laterales izq/der', quantity: 2, largo: 80, alto: 240, profundo: 45 },
+                { name: 'Techo', quantity: 1, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Piso', quantity: 1, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Estantes', quantity: 4, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Puertas', quantity: 2, largo: 40, alto: 240, profundo: 2 },
+            ],
+            biblioteca: [
+                { name: 'Laterales', quantity: 2, largo: 100, alto: 200, profundo: 30 },
+                { name: 'Techo/Piso', quantity: 2, largo: 100, alto: 1, profundo: 30 },
+                { name: 'Estantes', quantity: 6, largo: 100, alto: 1, profundo: 30 },
+            ],
+            escritorio: [
+                { name: 'Tapa', quantity: 1, largo: 120, alto: 3, profundo: 60 },
+                { name: 'Laterales', quantity: 2, largo: 1, alto: 70, profundo: 60 },
+                { name: 'Estantes superiores', quantity: 2, largo: 120, alto: 1, profundo: 30 },
+                { name: 'Gavetas', quantity: 3, largo: 120, alto: 20, profundo: 60 },
+            ],
+            tv_unit: [
+                { name: 'Base', quantity: 1, largo: 180, alto: 3, profundo: 50 },
+                { name: 'Laterales', quantity: 2, largo: 1, alto: 60, profundo: 50 },
+                { name: 'Estantes TV', quantity: 2, largo: 180, alto: 1, profundo: 50 },
+                { name: 'Puertas', quantity: 2, largo: 90, alto: 30, profundo: 50 },
+            ],
+            estantes: [
+                { name: 'Laterales', quantity: 2, largo: 30, alto: 150, profundo: 2 },
+                { name: 'Estantes', quantity: 5, largo: 80, alto: 3, profundo: 30 },
+            ],
+            mueble_cocina: [
+                { name: 'Laterales', quantity: 2, largo: 60, alto: 80, profundo: 60 },
+                { name: 'Puertas frente', quantity: 2, largo: 30, alto: 80, profundo: 2 },
+                { name: 'Gavetas', quantity: 2, largo: 60, alto: 20, profundo: 60 },
+            ]
+        };
+
+        const materials = {
+            melamina_blanca: { name: 'Melamina Blanca', default: 5000 },
+            melamina_nogal: { name: 'Melamina Nogal', default: 5500 },
+            melamina_roble: { name: 'Melamina Roble', default: 5800 },
+            mdf_premium: { name: 'MDF Premium', default: 6200 },
+            pino_macizo: { name: 'Pino Macizo', default: 8000 },
+            rauli_macizo: { name: 'Raulí Macizo', default: 12000 },
+        };
+
+        let components = [...furnitureTemplates.placard];
+        let imageLoaded = false;
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                imageLoaded = true;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('previewImage').style.display = 'block';
+                    analyzeImage();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function analyzeImage() {
+            if (!imageLoaded) return;
+
+            const alto = parseFloat(document.getElementById('dimAlto').value) || 0;
+            const ancho = parseFloat(document.getElementById('dimAncho').value) || 0;
+            const profundo = parseFloat(document.getElementById('dimProfundidad').value) || 0;
+
+            // Análisis básico basado en dimensiones
+            let analysis = '';
+            let suggestedMaterial = 'melamina_blanca';
+
+            if (alto > 200 && ancho > 60) {
+                analysis = `Detectamos un mueble de tamaño considerable (${alto}cm alto × ${ancho}cm ancho). Parece ser un placard o biblioteca de altura considerable. `;
+                suggestedMaterial = 'melamina_blanca';
+            } else if (alto < 100 && ancho > 100) {
+                analysis = `Mueble bajo y ancho, típico de unidad TV o escritorio con tapa. Dimensiones: ${alto}cm × ${ancho}cm. `;
+                suggestedMaterial = 'melamina_blanca';
+            } else {
+                analysis = `Mueble personalizado con dimensiones: ${alto}cm alto × ${ancho}cm ancho × ${profundo}cm profundo. `;
+                suggestedMaterial = 'melamina_blanca';
+            }
+
+            analysis += `Este análisis es una sugerencia basada en las dimensiones. El material final dependerá de tu presupuesto y necesidades de durabilidad.`;
+
+            document.getElementById('analysisText').textContent = analysis;
+
+            // Mostrar sugerencias de material
+            const suggestions = document.getElementById('materialSuggestions');
+            suggestions.innerHTML = '';
+
+            // Top 3 sugerencias
+            const topMaterials = ['melamina_blanca', 'melamina_nogal', 'mdf_premium'];
+            topMaterials.forEach((mat, idx) => {
+                const pill = document.createElement('button');
+                pill.className = 'material-pill' + (mat === suggestedMaterial ? ' selected' : '');
+                pill.textContent = materials[mat].name;
+                pill.onclick = () => {
+                    document.getElementById('material').value = mat;
+                    document.getElementById('costPerPlate').value = materials[mat].default;
+                    document.querySelectorAll('.material-pill').forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    updateCalculations();
+                };
+                suggestions.appendChild(pill);
+            });
+
+            document.getElementById('analysisSection').style.display = 'block';
+            updateCalculations();
+        }
+
+        function changeFurnitureType() {
+            const type = document.getElementById('furnitureType').value;
+            components = JSON.parse(JSON.stringify(furnitureTemplates[type] || furnitureTemplates.placard));
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function renderComponentsTable() {
+            const tbody = document.getElementById('componentsTable');
+            tbody.innerHTML = '';
+
+            components.forEach((comp, idx) => {
+                const area = (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+                const row = `
+                    <tr>
+                        <td><input type="text" class="form-input" style="width: 100%; padding: 6px 8px;" value="${comp.name}" onchange="updateComponent(${idx}, 'name', this.value)"></td>
+                        <td><input type="number" class="form-input" style="width: 60px; padding: 6px 8px;" value="${comp.quantity}" onchange="updateComponent(${idx}, 'quantity', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="form-input" style="width: 70px; padding: 6px 8px;" value="${comp.largo}" onchange="updateComponent(${idx}, 'largo', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="form-input" style="width: 60px; padding: 6px 8px;" value="${comp.alto}" onchange="updateComponent(${idx}, 'alto', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="form-input" style="width: 60px; padding: 6px 8px;" value="${comp.profundo}" onchange="updateComponent(${idx}, 'profundo', this.value); updateCalculations()"></td>
+                        <td style="text-align: right; font-weight: 600; color: var(--accent);">${area.toFixed(2)}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="removeComponent(${idx})">−</button></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateComponent(idx, field, value) {
+            if (['quantity', 'largo', 'alto', 'profundo'].includes(field)) {
+                components[idx][field] = parseFloat(value) || 0;
+            } else {
+                components[idx][field] = value;
+            }
+        }
+
+        function addComponent() {
+            components.push({ name: 'Nuevo Componente', quantity: 1, largo: 50, alto: 1, profundo: 50 });
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function removeComponent(idx) {
+            components.splice(idx, 1);
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            const waste = parseFloat(document.getElementById('wastePercent').value) || 0;
+            const costPerPlate = parseFloat(document.getElementById('costPerPlate').value) || 0;
+            const laqueado = parseFloat(document.getElementById('laqueadoMult').value) || 1;
+            const labor = parseFloat(document.getElementById('laborMult').value) || 1;
+            const complexity = parseFloat(document.getElementById('complexityMult').value) || 1;
+
+            let totalArea = 0;
+            components.forEach(comp => {
+                totalArea += (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+            });
+
+            const wasteArea = (totalArea * waste) / 100;
+            const totalWithWaste = totalArea + wasteArea;
+            const platesNeeded = Math.ceil(totalWithWaste / PLATE_SIZE);
+            const materialCost = platesNeeded * costPerPlate;
+            const totalMult = laqueado * labor * complexity;
+            const finalBudget = materialCost * totalMult;
+
+            document.getElementById('totalArea').textContent = totalArea.toFixed(2);
+            document.getElementById('calcArea').textContent = totalArea.toFixed(2);
+            document.getElementById('calcWaste').textContent = wasteArea.toFixed(2);
+            document.getElementById('calcTotal').textContent = totalWithWaste.toFixed(2);
+            document.getElementById('platesNeeded').textContent = platesNeeded;
+            document.getElementById('materialCost').textContent = materialCost.toLocaleString('es-AR');
+            document.getElementById('finalBudget').textContent = Math.round(finalBudget).toLocaleString('es-AR');
+            document.getElementById('showMultipliers').textContent = totalMult.toFixed(1) + 'x';
+        }
+
+        function copyToWhatsApp() {
+            const type = document.getElementById('furnitureType').value;
+            const budget = document.getElementById('finalBudget').textContent;
+            const alto = document.getElementById('dimAlto').value;
+            const ancho = document.getElementById('dimAncho').value;
+            const profundo = document.getElementById('dimProfundidad').value;
+            const totalArea = document.getElementById('totalArea').textContent;
+            const platesNeeded = document.getElementById('platesNeeded').textContent;
+
+            let componentsList = '';
+            components.forEach(comp => {
+                const area = (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+                componentsList += `  • ${comp.name}: ${comp.quantity} pz = ${area.toFixed(2)}m²\n`;
+            });
+
+            const msg = `📦 PRESUPUESTO POLT MOBILIER
+
+*${type.toUpperCase()}*
+Dimensiones: ${alto} × ${ancho} × ${profundo}cm
+
+*Componentes:*
+${componentsList}
+
+*Cálculo:*
+Área: ${totalArea}m² | Placas: ${platesNeeded}
+
+💰 *PRESUPUESTO: $${budget}*`;
+
+            navigator.clipboard.writeText(msg);
+            alert('✅ Presupuesto copiado al portapapeles');
+        }
+
+        function saveToHistory() {
+            const type = document.getElementById('furnitureType').value;
+            const budget = document.getElementById('finalBudget').textContent;
+
+            let history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            history.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleString('es-AR'),
+                type,
+                budget,
+                components: JSON.parse(JSON.stringify(components))
+            });
+
+            localStorage.setItem('poltHistory', JSON.stringify(history));
+            alert('✅ Presupuesto guardado');
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No hay presupuestos guardados aún</div>';
+                return;
+            }
+
+            container.innerHTML = history.map(h => `
+                <div class="history-item">
+                    <div class="history-item-header">
+                        <div>
+                            <div class="history-item-type">${h.type.toUpperCase()}</div>
+                            <div class="history-item-date">${h.date}</div>
+                        </div>
+                        <button class="btn btn-danger btn-small" onclick="deleteHistoryEntry(${h.id})">Eliminar</button>
+                    </div>
+                    <div class="history-item-amount">$${h.budget}</div>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" onclick="loadFromHistory(${h.id})">Cargar</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistoryEntry(id) {
+            if (confirm('¿Eliminar este presupuesto?')) {
+                let history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('poltHistory', JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function loadFromHistory(id) {
+            const history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            const entry = history.find(h => h.id === id);
+            if (entry) {
+                document.getElementById('furnitureType').value = entry.type;
+                components = JSON.parse(JSON.stringify(entry.components));
+                renderComponentsTable();
+                updateCalculations();
+                switchTab('calculator');
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('¿Limpiar todo el historial?')) {
+                localStorage.removeItem('poltHistory');
+                renderHistory();
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize
+        renderComponentsTable();
+        updateCalculations();
+        renderHistory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polt Mobilier - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3B82F6;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #FF9500;
+            --gray-light: #F3F4F6;
+            --gray-dark: #1F2937;
+            --blue-light: #60A5FA;
+            --purple: #A78BFA;
+            --yellow: #FBBF24;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gray-light);
+            color: var(--gray-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gray-dark);
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .sync-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #E5E7EB;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 1rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #6B7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* KPI ROW */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-detail {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 0.25rem 0.25rem 0.25rem 0;
+            text-transform: uppercase;
+        }
+
+        .badge-waiting { background: #FED7AA; color: #92400E; }
+        .badge-danger { background: #FECACA; color: #991B1B; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-blue { background: #DBEAFE; color: #1E40AF; }
+        .badge-yellow { background: #FEF08A; color: #713F12; }
+        .badge-purple { background: #E9D5FF; color: #581C87; }
+        .badge-cyan { background: #CFFAFE; color: #0C4A6E; }
+        .badge-gray { background: #D1D5DB; color: #374151; }
+
+        /* FILTERS */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* TABLE */
+        .table-responsive {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--gray-light);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-dark);
+            border-bottom: 2px solid #E5E7EB;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        tr:hover {
+            background: var(--gray-light);
+        }
+
+        tr.alert-row {
+            background: #FEE2E2 !important;
+        }
+
+        .alert-icon {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        /* CHARTS */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--gray-dark);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6B7280;
+        }
+
+        .spinner {
+            border: 4px solid var(--gray-light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ERROR */
+        .error {
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 1.25rem;
+            }
+
+            .kpi-row {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.875rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-input, .filter-select {
+                width: 100%;
+            }
+        }
+
+        .date-display {
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-top: 0.25rem;
+        }
+
+        .days-ago {
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-title">📊 Polt Mobilier Dashboard</div>
+            <div class="sync-status">
+                <span class="sync-indicator"></span>
+                <span>Sincronizado</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('potenciales')">
+                📋 POTENCIALES
+            </button>
+            <button class="tab" onclick="switchTab('produccion')">
+                📦 PRODUCCIÓN
+            </button>
+            <button class="tab" onclick="switchTab('dashboard')">
+                📊 DASHBOARD
+            </button>
+        </div>
+
+        <!-- TAB: POTENCIALES -->
+        <div id="potenciales" class="tab-content active">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Potenciales</h2>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Potenciales</div>
+                    <div class="kpi-value" id="total-potenciales">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Esperando Respuesta</div>
+                    <div class="kpi-value" id="potencial-esperando">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Convertidos a Cliente</div>
+                    <div class="kpi-value" id="potencial-cliente">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Tasa Conversión</div>
+                    <div class="kpi-value" id="conversion-rate">-</div>
+                    <div class="kpi-detail">últimos 7 días</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="filter-potencial-nombre" placeholder="🔍 Buscar por nombre o celular" class="filter-input" style="flex: 1;">
+                <select id="filter-potencial-estado" class="filter-select">
+                    <option value="">Filtrar por Estado</option>
+                    <option value="SIN_RESPUESTA">Sin Respuesta</option>
+                    <option value="ESPERAMOS_RESPUESTA">Esperamos Respuesta</option>
+                    <option value="COTIZACION_ENVIADA">Cotización Enviada</option>
+                    <option value="CLIENTE">Cliente</option>
+                    <option value="CERRAR">Cerrar</option>
+                    <option value="RECONTACTAR">Recontactar</option>
+                </select>
+                <select id="filter-potencial-prioridad" class="filter-select">
+                    <option value="">Filtrar por Prioridad</option>
+                    <option value="ALTA">Alta</option>
+                    <option value="MEDIA">Media</option>
+                    <option value="BAJA">Baja</option>
+                </select>
+            </div>
+
+            <div class="table-responsive">
+                <table id="potenciales-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Mueble</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Prioridad</th>
+                            <th>Celular</th>
+                            <th>Quién lo Tiene</th>
+                            <th>Seguimiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" class="loading"><div class="spinner"></div>Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: PRODUCCION -->
+        <div id="produccion" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Producción</h2>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total en Producción</div>
+                    <div class="kpi-value" id="total-produccion">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Finalizados</div>
+                    <div class="kpi-value" id="produccion-finalizado">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Alertas (>5 días)</div>
+                    <div class="kpi-value" id="produccion-alertas">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Pendientes</div>
+                    <div class="kpi-value" id="produccion-pendientes">-</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="filter-produccion-cliente" placeholder="🔍 Buscar por cliente o celular" class="filter-input" style="flex: 1;">
+                <select id="filter-produccion-estado" class="filter-select">
+                    <option value="">Filtrar por Estado</option>
+                    <option value="PLANIFICACIÓN">Planificación</option>
+                    <option value="CARPINTERIA">Carpintería</option>
+                    <option value="LAQUEADO">Laqueado</option>
+                    <option value="RETIRO PARA REMODELAR">Retiro para Remodelar</option>
+                    <option value="PENDIENTE">Pendiente</option>
+                    <option value="POST VENTA">Post Venta</option>
+                    <option value="FIDELIZACION">Fidelización</option>
+                    <option value="FINALIZADO">Finalizado</option>
+                </select>
+            </div>
+
+            <div class="table-responsive">
+                <table id="produccion-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Celular</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Actualizado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="loading"><div class="spinner"></div>Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: DASHBOARD -->
+        <div id="dashboard" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Dashboard Ejecutivo</h2>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">📈 Potenciales</div>
+                    <div class="kpi-value" id="dash-total-potenciales">-</div>
+                    <div class="kpi-detail" id="dash-potenciales-detail"></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">🎯 Conversión</div>
+                    <div class="kpi-value" id="dash-conversion">-</div>
+                    <div class="kpi-detail" id="dash-conversion-detail"></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">📦 Producción</div>
+                    <div class="kpi-value" id="dash-total-produccion">-</div>
+                    <div class="kpi-detail" id="dash-produccion-detail"></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">⚠️ Alertas</div>
+                    <div class="kpi-value" id="dash-alertas">-</div>
+                    <div class="kpi-detail">registros sin actualizar</div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Funnel de Conversión</h3>
+                    <div class="chart-container">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribución por Estado (Producción)</h3>
+                    <div class="chart-container">
+                        <canvas id="stateChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Por Prioridad</h3>
+                    <div class="chart-container">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURACIÓN ====================
+        // TODO: Reemplaza con tu SHEET_ID de Google Sheets
+        const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';
+        const API_KEY = 'YOUR_GOOGLE_API_KEY_HERE';
+
+        // Ranges de las hojas
+        const RANGES = {
+            potenciales: 'POTENCIALES!A:H',
+            produccion: 'PRODUCCION!A:D'
+        };
+
+        let potencialesData = [];
+        let produccionData = [];
+
+        // ==================== FUNCIONES DE DATOS ====================
+        async function fetchSheetData() {
+            try {
+                // Verificar si está configurado
+                if (SHEET_ID === 'YOUR_GOOGLE_SHEET_ID_HERE') {
+                    showError('Configura SHEET_ID y API_KEY en el código HTML');
+                    return;
+                }
+
+                // Obtener datos de POTENCIALES
+                const potRes = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGES.potenciales}?key=${API_KEY}`
+                );
+                const potJson = await potRes.json();
+
+                // Obtener datos de PRODUCCION
+                const prodRes = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGES.produccion}?key=${API_KEY}`
+                );
+                const prodJson = await prodRes.json();
+
+                // Procesar datos
+                potencialesData = parsePotenciales(potJson.values || []);
+                produccionData = parseProduccion(prodJson.values || []);
+
+                // Actualizar UI
+                updateUI();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Error al conectar con Google Sheets: ' + error.message);
+            }
+        }
+
+        function parsePotenciales(values) {
+            if (!values || values.length < 2) return [];
+            const headers = values[0];
+            return values.slice(1).map(row => ({
+                nombre: row[0] || '',
+                mueble: row[1] || '',
+                fecha: row[2] || '',
+                estado: row[3] || '',
+                quien_lo_tiene: row[4] || '',
+                fecha_seguimiento: row[5] || '',
+                prioridad: row[6] || '',
+                celular: row[7] || ''
+            })).filter(p => p.nombre); // Filtrar vacíos
+        }
+
+        function parseProduccion(values) {
+            if (!values || values.length < 2) return [];
+            const headers = values[0];
+            return values.slice(1).map(row => ({
+                cliente: row[0] || '',
+                celular: row[1] || '',
+                descripcion_breve: row[2] || '',
+                estado: row[3] || ''
+            })).filter(p => p.cliente); // Filtrar vacíos
+        }
+
+        function getEstadoBadge(estado) {
+            const badges = {
+                'SIN_RESPUESTA': '<span class="badge badge-gray">Sin Respuesta</span>',
+                'ESPERAMOS_RESPUESTA': '<span class="badge badge-waiting">🟠 Espera</span>',
+                'COTIZACION_ENVIADA': '<span class="badge badge-blue">🔵 Cotización</span>',
+                'CLIENTE': '<span class="badge badge-success">✅ Cliente</span>',
+                'CERRAR': '<span class="badge badge-danger">🔴 Cerrar</span>',
+                'RECONTACTAR': '<span class="badge badge-danger">🔴 Recontactar</span>',
+                'PLANIFICACIÓN': '<span class="badge badge-warning">🟠 Planificación</span>',
+                'CARPINTERIA': '<span class="badge badge-blue">🔵 Carpintería</span>',
+                'LAQUEADO': '<span class="badge badge-blue">🔵 Laqueado</span>',
+                'RETIRO PARA REMODELAR': '<span class="badge badge-yellow">🟡 Retiro</span>',
+                'PENDIENTE': '<span class="badge badge-danger">🔴 Pendiente</span>',
+                'POST VENTA': '<span class="badge badge-purple">🟣 Post Venta</span>',
+                'FIDELIZACION': '<span class="badge badge-cyan">🔷 Fidelización</span>',
+                'FINALIZADO': '<span class="badge badge-gray">⚫ Finalizado</span>'
+            };
+            return badges[estado] || estado;
+        }
+
+        function getPrioridadBadge(prioridad) {
+            const badges = {
+                'ALTA': '<span class="badge badge-danger">🔴 ALTA</span>',
+                'MEDIA': '<span class="badge badge-warning">🟡 MEDIA</span>',
+                'BAJA': '<span class="badge badge-success">🟢 BAJA</span>'
+            };
+            return badges[prioridad] || prioridad;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                const today = new Date();
+                const diffTime = Math.abs(today - date);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0) return 'Hoy';
+                if (diffDays === 1) return 'Ayer';
+                if (diffDays < 30) return `Hace ${diffDays}d`;
+
+                return date.toLocaleDateString('es-ES');
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        function getDaysAgo(dateString) {
+            if (!dateString) return 0;
+            try {
+                const date = new Date(dateString);
+                const today = new Date();
+                const diffTime = Math.abs(today - date);
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // ==================== ACTUALIZAR UI ====================
+        function updateUI() {
+            updatePotencialesTable();
+            updateProduccionTable();
+            updateKPIs();
+            updateCharts();
+        }
+
+        function updatePotencialesTable() {
+            const tbody = document.querySelector('#potenciales-table tbody');
+            const filterNombre = document.getElementById('filter-potencial-nombre').value.toLowerCase();
+            const filterEstado = document.getElementById('filter-potencial-estado').value;
+            const filterPrioridad = document.getElementById('filter-potencial-prioridad').value;
+
+            let filtered = potencialesData.filter(p => {
+                const matchNombre = !filterNombre ||
+                    p.nombre.toLowerCase().includes(filterNombre) ||
+                    p.celular.includes(filterNombre);
+                const matchEstado = !filterEstado || p.estado === filterEstado;
+                const matchPrioridad = !filterPrioridad || p.prioridad === filterPrioridad;
+                return matchNombre && matchEstado && matchPrioridad;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6B7280;">No hay datos</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => `
+                <tr>
+                    <td><strong>${p.nombre}</strong></td>
+                    <td>${p.mueble}</td>
+                    <td>${formatDate(p.fecha)}</td>
+                    <td>${getEstadoBadge(p.estado)}</td>
+                    <td>${getPrioridadBadge(p.prioridad)}</td>
+                    <td>${p.celular}</td>
+                    <td>${p.quien_lo_tiene}</td>
+                    <td>${p.fecha_seguimiento ? formatDate(p.fecha_seguimiento) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateProduccionTable() {
+            const tbody = document.querySelector('#produccion-table tbody');
+            const filterCliente = document.getElementById('filter-produccion-cliente').value.toLowerCase();
+            const filterEstado = document.getElementById('filter-produccion-estado').value;
+
+            let filtered = produccionData.filter(p => {
+                const matchCliente = !filterCliente ||
+                    p.cliente.toLowerCase().includes(filterCliente) ||
+                    p.celular.includes(filterCliente);
+                const matchEstado = !filterEstado || p.estado === filterEstado;
+                return matchCliente && matchEstado;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6B7280;">No hay datos</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => {
+                const daysAgo = getDaysAgo(new Date().toISOString());
+                const isAlert = daysAgo > 5;
+                return `
+                    <tr ${isAlert ? 'class="alert-row"' : ''}>
+                        <td><strong>${p.cliente}</strong></td>
+                        <td>${p.celular}</td>
+                        <td>${p.descripcion_breve}</td>
+                        <td>${getEstadoBadge(p.estado)}</td>
+                        <td>
+                            ${formatDate(new Date().toISOString())}
+                            ${isAlert ? '<span class="alert-icon"> ⚠️</span>' : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateKPIs() {
+            // POTENCIALES
+            const totalPot = potencialesData.length;
+            const esperando = potencialesData.filter(p => p.estado === 'ESPERAMOS_RESPUESTA').length;
+            const cliente = potencialesData.filter(p => p.estado === 'CLIENTE').length;
+            const conversionRate = totalPot > 0 ? ((cliente / totalPot) * 100).toFixed(1) : 0;
+
+            document.getElementById('total-potenciales').textContent = totalPot;
+            document.getElementById('potencial-esperando').textContent = esperando;
+            document.getElementById('potencial-cliente').textContent = cliente;
+            document.getElementById('conversion-rate').textContent = conversionRate + '%';
+
+            // PRODUCCION
+            const totalProd = produccionData.length;
+            const finalizado = produccionData.filter(p => p.estado === 'FINALIZADO').length;
+            const alertas = produccionData.filter(p => getDaysAgo(new Date().toISOString()) > 5).length;
+            const pendiente = produccionData.filter(p => p.estado === 'PENDIENTE').length;
+
+            document.getElementById('total-produccion').textContent = totalProd;
+            document.getElementById('produccion-finalizado').textContent = finalizado;
+            document.getElementById('produccion-alertas').textContent = alertas;
+            document.getElementById('produccion-pendientes').textContent = pendiente;
+
+            // DASHBOARD
+            document.getElementById('dash-total-potenciales').textContent = totalPot;
+            document.getElementById('dash-potenciales-detail').textContent = `Esperando: ${esperando}`;
+            document.getElementById('dash-total-produccion').textContent = totalProd;
+            document.getElementById('dash-produccion-detail').textContent = `Finalizados: ${finalizado}`;
+            document.getElementById('dash-conversion').textContent = conversionRate + '%';
+            document.getElementById('dash-conversion-detail').textContent = `${cliente} de ${totalPot}`;
+            document.getElementById('dash-alertas').textContent = alertas;
+        }
+
+        function updateCharts() {
+            // Funnel Chart
+            const funnelData = {
+                'Sin Respuesta': potencialesData.filter(p => p.estado === 'SIN_RESPUESTA').length,
+                'Esperando': potencialesData.filter(p => p.estado === 'ESPERAMOS_RESPUESTA').length,
+                'Cotización': potencialesData.filter(p => p.estado === 'COTIZACION_ENVIADA').length,
+                'Cliente': potencialesData.filter(p => p.estado === 'CLIENTE').length
+            };
+
+            const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+            if (window.funnelChartInstance) window.funnelChartInstance.destroy();
+            window.funnelChartInstance = new Chart(funnelCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(funnelData),
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: Object.values(funnelData),
+                        backgroundColor: ['#D1D5DB', '#FF9500', '#3B82F6', '#10B981']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // State Chart
+            const estadosCount = {};
+            produccionData.forEach(p => {
+                estadosCount[p.estado] = (estadosCount[p.estado] || 0) + 1;
+            });
+
+            const stateCtx = document.getElementById('stateChart').getContext('2d');
+            if (window.stateChartInstance) window.stateChartInstance.destroy();
+            window.stateChartInstance = new Chart(stateCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(estadosCount),
+                    datasets: [{
+                        data: Object.values(estadosCount),
+                        backgroundColor: ['#FF9500', '#60A5FA', '#60A5FA', '#FBBF24', '#EF4444', '#A78BFA', '#0EA5E9', '#6B7280']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Priority Chart
+            const prioridadCount = {};
+            potencialesData.forEach(p => {
+                prioridadCount[p.prioridad] = (prioridadCount[p.prioridad] || 0) + 1;
+            });
+
+            const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+            if (window.priorityChartInstance) window.priorityChartInstance.destroy();
+            window.priorityChartInstance = new Chart(priorityCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['ALTA', 'MEDIA', 'BAJA'],
+                    datasets: [{
+                        data: [
+                            prioridadCount['ALTA'] || 0,
+                            prioridadCount['MEDIA'] || 0,
+                            prioridadCount['BAJA'] || 0
+                        ],
+                        backgroundColor: ['#EF4444', '#FBBF24', '#10B981']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function showError(message) {
+            const potencias = document.querySelector('#potenciales-table tbody');
+            if (potencias) {
+                potencias.innerHTML = `<tr><td colspan="8" class="error">${message}</td></tr>`;
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        document.getElementById('filter-potencial-nombre').addEventListener('input', updatePotencialesTable);
+        document.getElementById('filter-potencial-estado').addEventListener('change', updatePotencialesTable);
+        document.getElementById('filter-potencial-prioridad').addEventListener('change', updatePotencialesTable);
+
+        document.getElementById('filter-produccion-cliente').addEventListener('input', updateProduccionTable);
+        document.getElementById('filter-produccion-estado').addEventListener('change', updateProduccionTable);
+
+        // ==================== INICIALIZAR ====================
+        fetchSheetData();
+        // Actualizar cada 30 segundos
+        setInterval(fetchSheetData, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polt Mobilier - Calculadora Profesional</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1d1d1d 0%, #2d2d2d 100%);
+            color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f5f5f5;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #f5f5f5;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .image-upload {
+            padding: 32px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .image-upload:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(96, 165, 250, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(96, 165, 250, 0.1);
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            grid-column: span 2;
+        }
+
+        .analysis-section {
+            display: none;
+        }
+
+        .analysis-section.active {
+            display: block;
+        }
+
+        .components-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+
+        .components-table thead {
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .components-table th,
+        .components-table td {
+            padding: 12px;
+            text-align: left;
+            color: #f5f5f5;
+        }
+
+        .components-table th {
+            color: #60a5fa;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .components-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(96, 165, 250, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .result-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #10b981;
+            margin: 10px 0;
+        }
+
+        .result-label {
+            color: #aaa;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .json-output {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn.active {
+            background: rgba(96, 165, 250, 0.2);
+            border-color: rgba(96, 165, 250, 0.5);
+            color: #60a5fa;
+        }
+
+        .example-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #999;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(96, 165, 250, 0.1);
+            border-color: rgba(96, 165, 250, 0.3);
+            color: #60a5fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(45, 45, 45, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 16px;
+            color: #60a5fa;
+        }
+
+        .modal-content p {
+            color: #aaa;
+            margin-bottom: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #f5f5f5;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .modal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .material-cost {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Polt Mobilier - Calculadora + Google Sheets</h1>
+            <p>Análisis profesional + Guardado automático de presupuestos</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- INPUT SECTION -->
+            <div class="card">
+                <div class="card-title">📸 Carga tu Mueble</div>
+
+                <div class="example-presets">
+                    <button class="preset-btn" onclick="loadPreset('placard')">Placard</button>
+                    <button class="preset-btn" onclick="loadPreset('biblioteca')">Biblioteca</button>
+                    <button class="preset-btn" onclick="loadPreset('cocina')">Cocina</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Tipo de Mueble</label>
+                    <select id="furnitureType" onchange="updatePreset()">
+                        <option value="custom">Personalizado</option>
+                        <option value="placard">Placard / Ropero</option>
+                        <option value="biblioteca">Biblioteca / Estantería</option>
+                        <option value="cocina">Mueble Cocina</option>
+                        <option value="escritorio">Escritorio</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Dimensiones Generales (cm)</label>
+                    <div class="input-row">
+                        <input type="number" id="altura" placeholder="Alto" value="240">
+                        <input type="number" id="ancho" placeholder="Ancho" value="80">
+                        <input type="number" id="profundo" placeholder="Profundo" value="45">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Descripción de Componentes</label>
+                    <textarea id="componentes" placeholder="Ej: 2 puertas espejo, 3 estantes, 2 cajones..." rows="3">2 puertas espejo, 3 estantes, 2 cajones inferiores</textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Material Principal</label>
+                    <select id="material">
+                        <option value="melamina18">Melamina 18mm</option>
+                        <option value="melamina25">Melamina 25mm</option>
+                        <option value="mdf18">MDF 18mm</option>
+                        <option value="mdf25">MDF 25mm</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="analyzeDesign()">🔍 Analizar</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">↻ Limpiar</button>
+                </div>
+            </div>
+
+            <!-- ANALYSIS SECTION -->
+            <div class="card analysis-section" id="analysisSection">
+                <div class="card-title">📊 Análisis Profesional</div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('analysis')">Desglose</button>
+                    <button class="tab-btn" onclick="switchTab('json')">JSON</button>
+                </div>
+
+                <div id="analysisTab" style="display: block;">
+                    <div class="result-box">
+                        <div class="result-label">Material Total Necesario</div>
+                        <div class="result-value" id="totalArea">1.56 m²</div>
+                    </div>
+
+                    <table class="components-table">
+                        <thead>
+                            <tr>
+                                <th>Componente</th>
+                                <th>Cant.</th>
+                                <th>Dimensiones</th>
+                                <th>Área (m²)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="componentsTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="jsonTab" style="display: none;">
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRESUPUESTO SECTION -->
+        <div class="card" id="presupuestoSection" style="display: none;">
+            <div class="card-title">💰 Presupuesto</div>
+
+            <div class="material-cost">
+                <div class="input-group">
+                    <label>Costo Material por m²</label>
+                    <input type="number" id="costPerM2" placeholder="$" value="2500" onchange="calculatePresupuesto()">
+                </div>
+                <div class="input-group">
+                    <label>Multiplicador (Laqueado, Acabados)</label>
+                    <input type="number" id="multiplier" placeholder="1.0" value="1.5" step="0.1" onchange="calculatePresupuesto()">
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Costo Material</div>
+                <div class="result-value" id="materialCost">$3,890</div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div class="result-label">Precio Final Presupuesto</div>
+                    <div class="result-value" id="finalPrice">$5,835</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-success" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
+                <button class="btn btn-save" onclick="setupGoogleSheets()">💾 Guardar en Sheets</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para configurar Google Sheets -->
+    <div id="sheetsModal" class="modal">
+        <div class="modal-content">
+            <h3>🔗 Conectar Google Sheets</h3>
+            <p>Para guardar los presupuestos automáticamente, necesitas tu URL de webhook de Google Apps Script.</p>
+            <p style="background: rgba(96, 165, 250, 0.1); padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                <strong>Pasos:</strong><br>
+                1. Abre tu Google Sheet<br>
+                2. Herramientas → Editor de secuencias de comandos<br>
+                3. Pega el código que te dimos<br>
+                4. Ejecutar → Autorizar<br>
+                5. Desplegar → Nueva implementación (tipo: API)<br>
+                6. Copia la URL del webhook
+            </p>
+            <input type="text" id="webhookUrl" placeholder="https://script.google.com/macros/d/...">
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveWebhookUrl()">Guardar URL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const presets = {
+            placard: {
+                altura: 240, ancho: 80, profundo: 45,
+                componentes: '2 puertas espejo, 3 estantes, 2 cajones',
+                total: 1.5569,
+                componentsData: [
+                    {nombre: 'Laterales', cantidad: 2, dimensions: '45 × 240', area: 0.216},
+                    {nombre: 'Techo/Base', cantidad: 2, dimensions: '80 × 45', area: 0.072},
+                    {nombre: 'Estantes', cantidad: 3, dimensions: '80 × 45', area: 0.108},
+                    {nombre: 'Cajones', cantidad: 2, dimensions: 'Varios', area: 0.287},
+                    {nombre: 'Puertas', cantidad: 2, dimensions: '40 × 240', area: 0.873},
+                ]
+            },
+            biblioteca: {
+                altura: 200, ancho: 120, profundo: 35,
+                componentes: '5 estantes de diferentes tamaños, 2 divisiones',
+                total: 2.3904,
+                componentsData: [
+                    {nombre: 'Laterales', cantidad: 2, dimensions: '35 × 200', area: 0.276},
+                    {nombre: 'Base/Techo', cantidad: 2, dimensions: '120 × 35', area: 0.168},
+                    {nombre: 'Estantes (5)', cantidad: 5, dimensions: 'Variables', area: 0.315},
+                    {nombre: 'Divisiones', cantidad: 2, dimensions: '35 × 200', area: 0.252},
+                ]
+            },
+            cocina: {
+                altura: 90, ancho: 60, profundo: 55,
+                componentes: '1 puerta blanca, 3 cajones, 2 estantes',
+                total: 1.5729,
+                componentsData: [
+                    {nombre: 'Laterales', cantidad: 2, dimensions: '55 × 90', area: 0.198},
+                    {nombre: 'Base/Techo', cantidad: 2, dimensions: '60 × 55', area: 0.132},
+                    {nombre: 'Estantes', cantidad: 2, dimensions: '60 × 55', area: 0.132},
+                    {nombre: 'Puerta', cantidad: 1, dimensions: '60 × 90', area: 0.540},
+                    {nombre: 'Cajones', cantidad: 3, dimensions: 'Varios', area: 0.460},
+                ]
+            }
+        };
+
+        let webhookUrl = localStorage.getItem('polt_webhook_url') || '';
+
+        function loadPreset(type) {
+            const preset = presets[type];
+            document.getElementById('altura').value = preset.altura;
+            document.getElementById('ancho').value = preset.ancho;
+            document.getElementById('profundo').value = preset.profundo;
+            document.getElementById('componentes').value = preset.componentes;
+            document.getElementById('furnitureType').value = type;
+        }
+
+        function analyzeDesign() {
+            const furnitureType = document.getElementById('furnitureType').value;
+            let analysisData = presets[furnitureType] || presets.placard;
+
+            document.getElementById('analysisSection').classList.add('active');
+            document.getElementById('presupuestoSection').style.display = 'block';
+
+            document.getElementById('totalArea').textContent = analysisData.total.toFixed(2) + ' m²';
+
+            const tbody = document.getElementById('componentsTableBody');
+            tbody.innerHTML = analysisData.componentsData.map(c => `
+                <tr>
+                    <td>${c.nombre}</td>
+                    <td>${c.cantidad}</td>
+                    <td>${c.dimensions}</td>
+                    <td>${c.area.toFixed(3)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('jsonOutput').textContent = JSON.stringify({
+                tipo_mueble: furnitureType,
+                dimensiones: `${document.getElementById('altura').value}×${document.getElementById('ancho').value}×${document.getElementById('profundo').value}`,
+                area_total_m2: analysisData.total,
+                componentes: analysisData.componentsData
+            }, null, 2);
+
+            calculatePresupuesto();
+        }
+
+        function calculatePresupuesto() {
+            const furnitureType = document.getElementById('furnitureType').value;
+            const analysisData = presets[furnitureType] || presets.placard;
+            const costPerM2 = parseFloat(document.getElementById('costPerM2').value) || 2500;
+            const multiplier = parseFloat(document.getElementById('multiplier').value) || 1.5;
+
+            const materialCost = analysisData.total * costPerM2;
+            const finalPrice = materialCost * multiplier;
+
+            document.getElementById('materialCost').textContent = '$' + Math.round(materialCost).toLocaleString('es-AR');
+            document.getElementById('finalPrice').textContent = '$' + Math.round(finalPrice).toLocaleString('es-AR');
+        }
+
+        function switchTab(tab) {
+            document.getElementById('analysisTab').style.display = tab === 'analysis' ? 'block' : 'none';
+            document.getElementById('jsonTab').style.display = tab === 'json' ? 'block' : 'none';
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function shareViaWhatsApp() {
+            const furnitureType = document.getElementById('furnitureType').value;
+            const finalPrice = document.getElementById('finalPrice').textContent;
+            const mensaje = `*PRESUPUESTO POLT MOBILIER*\n\n${furnitureType.toUpperCase()}\n\n💰 Presupuesto: ${finalPrice}\n\n✨ Calculado con Carpintero Virtual`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+        }
+
+        function setupGoogleSheets() {
+            document.getElementById('sheetsModal').classList.add('active');
+        }
+
+        function saveWebhookUrl() {
+            const url = document.getElementById('webhookUrl').value;
+            if (!url) {
+                alert('⚠️ Ingresa la URL del webhook');
+                return;
+            }
+            localStorage.setItem('polt_webhook_url', url);
+            webhookUrl = url;
+            closeModal();
+            sendToGoogleSheets();
+        }
+
+        function closeModal() {
+            document.getElementById('sheetsModal').classList.remove('active');
+        }
+
+        function sendToGoogleSheets() {
+            if (!webhookUrl) {
+                alert('❌ Primero configura la URL de Google Sheets');
+                setupGoogleSheets();
+                return;
+            }
+
+            const furnitureType = document.getElementById('furnitureType').value;
+            const analysisData = presets[furnitureType] || presets.placard;
+            const costPerM2 = parseFloat(document.getElementById('costPerM2').value);
+            const multiplier = parseFloat(document.getElementById('multiplier').value);
+            const materialCost = analysisData.total * costPerM2;
+            const finalPrice = materialCost * multiplier;
+
+            const data = {
+                tipoMueble: furnitureType,
+                dimensiones: `${document.getElementById('altura').value}×${document.getElementById('ancho').value}×${document.getElementById('profundo').value}`,
+                materialM2: analysisData.total,
+                costPerM2: costPerM2,
+                materialCost: Math.round(materialCost),
+                multiplier: multiplier,
+                finalPrice: Math.round(finalPrice)
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                alert('✅ ' + result.message);
+            })
+            .catch(err => {
+                alert('❌ Error: ' + err);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('altura').value = 240;
+            document.getElementById('ancho').value = 80;
+            document.getElementById('profundo').value = 45;
+            document.getElementById('componentes').value = '';
+            document.getElementById('furnitureType').value = 'custom';
+            document.getElementById('analysisSection').classList.remove('active');
+            document.getElementById('presupuestoSection').style.display = 'none';
+        }
+
+        function updatePreset() {
+            const type = document.getElementById('furnitureType').value;
+            if (type !== 'custom' && presets[type]) {
+                loadPreset(type);
+            }
+        }
+    </script>
+</body>
+</html>

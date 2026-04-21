@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLT MOBILIER - Sistema de Presupuestos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1F4E78;
+            --secondary: #2E7CB1;
+            --success: #22C55E;
+            --warning: #FBBF24;
+            --danger: #EF4444;
+            --light: #F8FAFC;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .navbar-brand { font-weight: bold; font-size: 1.3rem; }
+
+        .navbar {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand, .navbar-text { color: white !important; }
+
+        .container-main {
+            max-width: 1400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header-section h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; }
+        .header-section p { font-size: 1.1rem; opacity: 0.9; }
+
+        .content-area { padding: 30px; }
+
+        .card-custom {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .card-body-custom { padding: 20px; }
+
+        .input-group-custom {
+            margin-bottom: 15px;
+        }
+
+        .input-group-custom label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .input-group-custom input,
+        .input-group-custom select {
+            border: 1px solid #DDD;
+            border-radius: 6px;
+            padding: 10px 12px;
+            width: 100%;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .input-group-custom input:focus,
+        .input-group-custom select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(46, 124, 177, 0.1);
+            outline: none;
+        }
+
+        .input-yellow {
+            background-color: #FFFF99 !important;
+            color: #333 !important;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(31, 78, 120, 0.3);
+        }
+
+        .btn-success-custom {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-success-custom:hover {
+            background: #16A34A;
+        }
+
+        .btn-danger-custom {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger-custom:hover {
+            background: #DC2626;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--secondary);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(46, 124, 177, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(31, 78, 120, 0.08);
+        }
+
+        .upload-area i { font-size: 2.5rem; color: var(--secondary); margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table thead {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #EEE;
+        }
+
+        table input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #DDD;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        table input.input-yellow {
+            background-color: #FFFF99 !important;
+        }
+
+        table tbody tr:hover {
+            background: #F8FAFC;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .result-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .calc-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .detail-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-item .label { opacity: 0.9; }
+        .detail-item .value { font-weight: bold; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #EEE;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn:hover {
+            color: var(--secondary);
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(90deg, #25D366 0%, #1BAF5D 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .badge-custom {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-primary { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: white; }
+        .badge-success { background: var(--success); color: white; }
+
+        .history-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-item-type {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .history-item-date {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .history-item-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2col { grid-template-columns: 1fr; }
+            .calc-detail { grid-template-columns: 1fr; }
+            .header-section h1 { font-size: 1.8rem; }
+            .result-value { font-size: 2rem; }
+        }
+
+        .spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner i {
+            font-size: 2rem;
+            color: var(--secondary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert-custom {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert-custom.show { display: block; }
+
+        .alert-success { background: rgba(34, 197, 94, 0.1); color: #16A34A; border-left: 4px solid var(--success); }
+        .alert-error { background: rgba(239, 68, 68, 0.1); color: #DC2626; border-left: 4px solid var(--danger); }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fas fa-furniture"></i> POLT MOBILIER
+            </span>
+            <span class="navbar-text">
+                <i class="fas fa-calculator"></i> Sistema de Presupuestos
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-main">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>Calculadora de Presupuestos</h1>
+            <p>Calcula presupuestos precisos basados en componentes</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content-area">
+            <!-- Tabs Navigation -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="switchTab('calculator')">
+                    <i class="fas fa-calculator"></i> Calculadora
+                </button>
+                <button class="tab-btn" onclick="switchTab('history')">
+                    <i class="fas fa-history"></i> Historial
+                </button>
+            </div>
+
+            <!-- CALCULATOR TAB -->
+            <div id="calculator" class="tab-content active">
+                <div class="grid-2col">
+                    <!-- LEFT COLUMN -->
+                    <div>
+                        <!-- Image Upload -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-image"></i> Render del Mueble
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                                    <input type="file" id="imageInput" accept="image/*" style="display:none;">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p style="margin-top: 10px; color: #666;">Carga una foto o render del mueble</p>
+                                </div>
+                                <img id="previewImage" class="image-preview" style="display:none;">
+                            </div>
+                        </div>
+
+                        <!-- Furniture Type -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-chair"></i> Tipo de Mueble
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="input-group-custom">
+                                    <select id="furnitureType" onchange="changeFurnitureType()" class="input-yellow">
+                                        <option value="placard">Placard</option>
+                                        <option value="biblioteca">Biblioteca</option>
+                                        <option value="escritorio">Escritorio</option>
+                                        <option value="tv_unit">Unidad TV</option>
+                                        <option value="estantes">Estantes Flotantes</option>
+                                        <option value="mueble_cocina">Mueble de Cocina</option>
+                                        <option value="custom">Personalizado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dimensions -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-ruler-combined"></i> Dimensiones Base (cm)
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="input-group-custom">
+                                    <label>Alto</label>
+                                    <input type="number" id="dimAlto" value="240" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Ancho</label>
+                                    <input type="number" id="dimAncho" value="80" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Profundidad</label>
+                                    <input type="number" id="dimProfundidad" value="45" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Materials -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-palette"></i> Material
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="input-group-custom">
+                                    <label>Seleccionar Material</label>
+                                    <select id="material" onchange="updateMaterialCost()" class="input-yellow">
+                                        <option value="melamina_blanca">Melamina Blanca - $5,000</option>
+                                        <option value="melamina_nogal">Melamina Nogal - $5,500</option>
+                                        <option value="melamina_roble">Melamina Roble - $5,800</option>
+                                        <option value="mdf_premium">MDF Premium - $6,200</option>
+                                        <option value="pino_macizo">Pino Macizo - $8,000</option>
+                                        <option value="rauli_macizo">Raulí Macizo - $12,000</option>
+                                    </select>
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Costo por Placa (ARS)</label>
+                                    <input type="number" id="costPerPlate" value="5000" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Parameters -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-sliders-h"></i> Parámetros
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="input-group-custom">
+                                    <label>Desperdicio (%)</label>
+                                    <input type="number" id="wastePercent" value="20" min="0" max="50" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Multiplicador Laqueado</label>
+                                    <input type="number" id="laqueadoMult" value="1.0" step="0.1" min="1" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Multiplicador Mano de Obra</label>
+                                    <input type="number" id="laborMult" value="2.5" step="0.1" min="1" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                                <div class="input-group-custom">
+                                    <label>Multiplicador Complejidad</label>
+                                    <input type="number" id="complexityMult" value="1.0" step="0.1" min="1" class="input-yellow" onchange="updateCalculations()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div>
+                        <!-- Components -->
+                        <div class="card-custom">
+                            <div class="card-header-custom" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><i class="fas fa-th-list"></i> Componentes</span>
+                                <button class="btn-success-custom" onclick="addComponent()">
+                                    <i class="fas fa-plus"></i> Agregar
+                                </button>
+                            </div>
+                            <div class="card-body-custom">
+                                <div style="overflow-x: auto;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Componente</th>
+                                                <th>Cant</th>
+                                                <th>Largo</th>
+                                                <th>Alto</th>
+                                                <th>Prof</th>
+                                                <th>m²</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="componentsTable"></tbody>
+                                    </table>
+                                </div>
+                                <div style="margin-top: 15px; padding: 12px; background: var(--light); border-radius: 8px; font-weight: bold;">
+                                    Área Total: <span id="totalArea" style="color: var(--secondary);">0.00</span> m²
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculation Detail -->
+                        <div class="card-custom">
+                            <div class="card-header-custom">
+                                <i class="fas fa-calculator"></i> Desglose de Cálculo
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="detail-item">
+                                    <span class="label">Área componentes:</span>
+                                    <span class="value"><span id="calcArea">0.00</span> m²</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">+ Desperdicio:</span>
+                                    <span class="value"><span id="calcWaste">0.00</span> m²</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Total:</span>
+                                    <span class="value"><span id="calcTotal">0.00</span> m²</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Placas necesarias:</span>
+                                    <span class="value" style="color: var(--success); font-size: 1.2rem;"><span id="platesNeeded">0</span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Costo material:</span>
+                                    <span class="value">$<span id="materialCost">0</span></span>
+                                </div>
+                                <div class="detail-item" style="grid-column: 1 / -1; justify-content: space-around;">
+                                    <div>Laqueado: <strong id="showLaqueado">1.0x</strong></div>
+                                    <div>M.O: <strong id="showLabor">2.5x</strong></div>
+                                    <div>Complejidad: <strong id="showComplexity">1.0x</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Result -->
+                        <div class="result-box">
+                            <div class="result-label">PRESUPUESTO FINAL</div>
+                            <div class="result-value">$<span id="finalBudget">0</span></div>
+                            <button class="btn-whatsapp" onclick="copyToWhatsApp()">
+                                <i class="fab fa-whatsapp"></i> Copiar para WhatsApp
+                            </button>
+                            <button style="background: linear-gradient(90deg, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;" onclick="saveToHistory()">
+                                <i class="fas fa-save"></i> Guardar Presupuesto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY TAB -->
+            <div id="history" class="tab-content">
+                <div class="card-custom">
+                    <div class="card-header-custom">
+                        <i class="fas fa-history"></i> Historial de Presupuestos
+                    </div>
+                    <div class="card-body-custom">
+                        <div id="historyContainer" style="max-height: 600px; overflow-y: auto;"></div>
+                        <button class="btn-primary-custom" style="width: 100%; margin-top: 15px;" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i> Limpiar Historial
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PLATE_SIZE = 4.46; // m²
+
+        const furnitureTemplates = {
+            placard: [
+                { name: 'Laterales izq/der', quantity: 2, largo: 80, alto: 240, profundo: 45 },
+                { name: 'Techo', quantity: 1, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Piso', quantity: 1, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Estantes', quantity: 4, largo: 80, alto: 1, profundo: 45 },
+                { name: 'Puertas', quantity: 2, largo: 40, alto: 240, profundo: 2 },
+            ],
+            biblioteca: [
+                { name: 'Laterales', quantity: 2, largo: 100, alto: 200, profundo: 30 },
+                { name: 'Techo/Piso', quantity: 2, largo: 100, alto: 1, profundo: 30 },
+                { name: 'Estantes', quantity: 6, largo: 100, alto: 1, profundo: 30 },
+                { name: 'Divisiones', quantity: 1, largo: 1, alto: 200, profundo: 30 },
+            ],
+            escritorio: [
+                { name: 'Tapa', quantity: 1, largo: 120, alto: 3, profundo: 60 },
+                { name: 'Laterales', quantity: 2, largo: 1, alto: 70, profundo: 60 },
+                { name: 'Estantes superiores', quantity: 2, largo: 120, alto: 1, profundo: 30 },
+                { name: 'Gavetas', quantity: 3, largo: 120, alto: 20, profundo: 60 },
+            ],
+            tv_unit: [
+                { name: 'Base', quantity: 1, largo: 180, alto: 3, profundo: 50 },
+                { name: 'Laterales', quantity: 2, largo: 1, alto: 60, profundo: 50 },
+                { name: 'Estantes TV', quantity: 2, largo: 180, alto: 1, profundo: 50 },
+                { name: 'Puertas/Cajones', quantity: 2, largo: 90, alto: 30, profundo: 50 },
+            ],
+            estantes: [
+                { name: 'Laterales', quantity: 2, largo: 30, alto: 150, profundo: 2 },
+                { name: 'Estantes', quantity: 5, largo: 80, alto: 3, profundo: 30 },
+                { name: 'Soportes', quantity: 10, largo: 5, alto: 5, profundo: 1 },
+            ],
+            mueble_cocina: [
+                { name: 'Laterales', quantity: 2, largo: 60, alto: 80, profundo: 60 },
+                { name: 'Techo/Piso', quantity: 2, largo: 60, alto: 2, profundo: 60 },
+                { name: 'Estantes', quantity: 2, largo: 60, alto: 1, profundo: 60 },
+                { name: 'Puertas frente', quantity: 2, largo: 30, alto: 80, profundo: 2 },
+                { name: 'Gavetas', quantity: 2, largo: 60, alto: 20, profundo: 60 },
+            ],
+            custom: [
+                { name: 'Componente 1', quantity: 1, largo: 100, alto: 100, profundo: 50 },
+            ]
+        };
+
+        const materials = {
+            melamina_blanca: 5000,
+            melamina_nogal: 5500,
+            melamina_roble: 5800,
+            mdf_premium: 6200,
+            pino_macizo: 8000,
+            rauli_macizo: 12000,
+        };
+
+        let components = [...furnitureTemplates.placard];
+
+        // Image Upload
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('previewImage').src = event.target.result;
+                    document.getElementById('previewImage').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function changeFurnitureType() {
+            const type = document.getElementById('furnitureType').value;
+            components = JSON.parse(JSON.stringify(furnitureTemplates[type] || furnitureTemplates.placard));
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function renderComponentsTable() {
+            const tbody = document.getElementById('componentsTable');
+            tbody.innerHTML = '';
+
+            components.forEach((comp, idx) => {
+                const area = (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+                const row = `
+                    <tr>
+                        <td><input type="text" value="${comp.name}" onchange="updateComponent(${idx}, 'name', this.value)"></td>
+                        <td><input type="number" class="input-yellow" value="${comp.quantity}" onchange="updateComponent(${idx}, 'quantity', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="input-yellow" value="${comp.largo}" onchange="updateComponent(${idx}, 'largo', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="input-yellow" value="${comp.alto}" onchange="updateComponent(${idx}, 'alto', this.value); updateCalculations()"></td>
+                        <td><input type="number" class="input-yellow" value="${comp.profundo}" onchange="updateComponent(${idx}, 'profundo', this.value); updateCalculations()"></td>
+                        <td style="text-align: right; font-weight: bold;">${area.toFixed(2)}</td>
+                        <td><button class="btn-danger-custom" onclick="removeComponent(${idx})"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateComponent(idx, field, value) {
+            if (field === 'quantity' || field === 'largo' || field === 'alto' || field === 'profundo') {
+                components[idx][field] = parseFloat(value) || 0;
+            } else {
+                components[idx][field] = value;
+            }
+        }
+
+        function addComponent() {
+            components.push({ name: 'Nuevo Componente', quantity: 1, largo: 50, alto: 1, profundo: 50 });
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function removeComponent(idx) {
+            components.splice(idx, 1);
+            renderComponentsTable();
+            updateCalculations();
+        }
+
+        function updateMaterialCost() {
+            const material = document.getElementById('material').value;
+            document.getElementById('costPerPlate').value = materials[material];
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            const waste = parseFloat(document.getElementById('wastePercent').value) || 0;
+            const costPerPlate = parseFloat(document.getElementById('costPerPlate').value) || 0;
+            const laqueado = parseFloat(document.getElementById('laqueadoMult').value) || 1;
+            const labor = parseFloat(document.getElementById('laborMult').value) || 1;
+            const complexity = parseFloat(document.getElementById('complexityMult').value) || 1;
+
+            // Calculate total area
+            let totalArea = 0;
+            components.forEach(comp => {
+                totalArea += (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+            });
+
+            const wasteArea = (totalArea * waste) / 100;
+            const totalWithWaste = totalArea + wasteArea;
+            const platesNeeded = Math.ceil(totalWithWaste / PLATE_SIZE);
+            const materialCost = platesNeeded * costPerPlate;
+            const finalBudget = materialCost * laqueado * labor * complexity;
+
+            // Update UI
+            document.getElementById('totalArea').textContent = totalArea.toFixed(2);
+            document.getElementById('calcArea').textContent = totalArea.toFixed(2);
+            document.getElementById('calcWaste').textContent = wasteArea.toFixed(2);
+            document.getElementById('calcTotal').textContent = totalWithWaste.toFixed(2);
+            document.getElementById('platesNeeded').textContent = platesNeeded;
+            document.getElementById('materialCost').textContent = materialCost.toLocaleString('es-AR');
+            document.getElementById('finalBudget').textContent = Math.round(finalBudget).toLocaleString('es-AR');
+
+            document.getElementById('showLaqueado').textContent = laqueado.toFixed(1) + 'x';
+            document.getElementById('showLabor').textContent = labor.toFixed(1) + 'x';
+            document.getElementById('showComplexity').textContent = complexity.toFixed(1) + 'x';
+        }
+
+        function copyToWhatsApp() {
+            const furnitureType = document.getElementById('furnitureType').value;
+            const alto = document.getElementById('dimAlto').value;
+            const ancho = document.getElementById('dimAncho').value;
+            const profundidad = document.getElementById('dimProfundidad').value;
+            const finalBudget = document.getElementById('finalBudget').textContent;
+            const totalArea = document.getElementById('totalArea').textContent;
+            const platesNeeded = document.getElementById('platesNeeded').textContent;
+
+            let componentsList = '';
+            components.forEach(comp => {
+                const area = (comp.quantity * comp.largo * comp.alto * comp.profundo) / 10000;
+                componentsList += `  • ${comp.name}: ${comp.quantity} pz (${comp.largo}×${comp.alto}×${comp.profundo}cm) = ${area.toFixed(2)}m²\n`;
+            });
+
+            const msg = `📦 PRESUPUESTO POLT MOBILIER
+
+*Tipo:* ${furnitureType.toUpperCase()}
+*Dimensiones:* ${alto}cm alto × ${ancho}cm ancho × ${profundidad}cm profundo
+
+*Componentes:*
+${componentsList}
+
+*Cálculo:*
+Área total: ${totalArea} m²
+Placas necesarias: ${platesNeeded}
+
+💰 *PRESUPUESTO FINAL: $${finalBudget}*
+
+---
+Generado con POLT Mobilier Calculator`;
+
+            navigator.clipboard.writeText(msg);
+            alert('✅ Presupuesto copiado al portapapeles!\nAhora puedes pegarlo en WhatsApp');
+        }
+
+        function saveToHistory() {
+            const furnitureType = document.getElementById('furnitureType').value;
+            const finalBudget = document.getElementById('finalBudget').textContent;
+
+            let history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            const entry = {
+                id: Date.now(),
+                date: new Date().toLocaleString('es-AR'),
+                type: furnitureType,
+                budget: finalBudget,
+                components: JSON.parse(JSON.stringify(components)),
+                dimensions: {
+                    alto: document.getElementById('dimAlto').value,
+                    ancho: document.getElementById('dimAncho').value,
+                    profundo: document.getElementById('dimProfundidad').value
+                }
+            };
+
+            history.unshift(entry);
+            localStorage.setItem('poltHistory', JSON.stringify(history));
+            alert('✅ Presupuesto guardado en historial');
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No hay presupuestos guardados aún</p>';
+                return;
+            }
+
+            container.innerHTML = history.map(entry => `
+                <div class="history-item">
+                    <div class="history-item-header">
+                        <div>
+                            <span class="history-item-type">${entry.type.toUpperCase()}</span>
+                            <span class="badge-custom badge-success" style="margin-left: 10px;">${entry.dimensions.alto} × ${entry.dimensions.ancho} × ${entry.dimensions.profundo} cm</span>
+                        </div>
+                        <button class="btn-danger-custom" onclick="deleteHistoryEntry(${entry.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="history-item-date">${entry.date}</span>
+                        <span class="history-item-amount">$${entry.budget}</span>
+                    </div>
+                    <button style="background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 0.9rem;" onclick="loadFromHistory(${entry.id})">
+                        <i class="fas fa-redo"></i> Cargar este presupuesto
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistoryEntry(id) {
+            if (confirm('¿Eliminar este presupuesto?')) {
+                let history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('poltHistory', JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function loadFromHistory(id) {
+            const history = JSON.parse(localStorage.getItem('poltHistory') || '[]');
+            const entry = history.find(h => h.id === id);
+
+            if (entry) {
+                document.getElementById('furnitureType').value = entry.type;
+                document.getElementById('dimAlto').value = entry.dimensions.alto;
+                document.getElementById('dimAncho').value = entry.dimensions.ancho;
+                document.getElementById('dimProfundidad').value = entry.dimensions.profundo;
+                components = JSON.parse(JSON.stringify(entry.components));
+
+                renderComponentsTable();
+                updateCalculations();
+                switchTab('calculator');
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('¿Eliminar TODO el historial de presupuestos?')) {
+                localStorage.removeItem('poltHistory');
+                renderHistory();
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderComponentsTable();
+            updateCalculations();
+            renderHistory();
+        });
+    </script>
+</body>
+</html>

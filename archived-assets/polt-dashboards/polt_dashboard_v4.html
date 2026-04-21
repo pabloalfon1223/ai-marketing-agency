@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polt Calculator Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d4af37;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #bbb;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .multiplier-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .multiplier-input {
+            text-align: center;
+        }
+
+        .multiplier-input label {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .multiplier-input input {
+            margin-top: 4px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .component-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .component-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .component-item input {
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+
+        .component-item .m2-display {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .btn-remove {
+            background: rgba(255, 67, 67, 0.2);
+            border: 1px solid rgba(255, 67, 67, 0.5);
+            color: #ff4343;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 67, 67, 0.3);
+            border-color: rgba(255, 67, 67, 0.7);
+        }
+
+        .btn-add-component {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #d4af37;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-component:hover {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: rgba(212, 175, 55, 0.7);
+        }
+
+        .summary-section {
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .summary-row-full {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .summary-label {
+            color: #999;
+        }
+
+        .summary-value {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .cost-breakdown {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cost-line {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.9rem;
+        }
+
+        .cost-line:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .cost-line.total {
+            border-top: 2px solid rgba(212, 175, 55, 0.5);
+            padding-top: 12px;
+            margin-top: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .cost-line .label {
+            color: #bbb;
+        }
+
+        .cost-line .value {
+            color: #fff;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .cost-line.total .value {
+            color: #d4af37;
+            font-size: 1.15rem;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 600px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: rgba(255, 67, 67, 0.2);
+            border: 1px solid rgba(255, 67, 67, 0.5);
+            color: #ff4343;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #999;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .json-output {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            color: #d4af37;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Polt Calculator Pro</h1>
+            <p>Sistema profesional de presupuestos para muebles a medida</p>
+        </div>
+
+        <div class="grid">
+            <!-- Left Panel: Input -->
+            <div class="card">
+                <h2>📋 Información del Presupuesto</h2>
+
+                <div class="success-message" id="successMsg"></div>
+                <div class="error-message" id="errorMsg"></div>
+
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <input type="text" id="cliente" placeholder="Nombre del cliente">
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Mueble</label>
+                    <input type="text" id="tipoMueble" placeholder="Ej: Placard, Biblioteca, Cocina..." value="Custom">
+                </div>
+
+                <div class="form-group">
+                    <label>Dimensiones (ancho x alto x profundidad cm)</label>
+                    <input type="text" id="dimensiones" placeholder="Ej: 200 x 240 x 60">
+                </div>
+
+                <div class="form-group">
+                    <label>Material</label>
+                    <select id="material">
+                        <option value="Melamina 18mm - 15%">Melamina 18mm (15% desperdicio)</option>
+                        <option value="Melamina 25mm - 15%">Melamina 25mm (15% desperdicio)</option>
+                        <option value="MDF 18mm - 18%">MDF 18mm (18% desperdicio)</option>
+                        <option value="MDF 25mm - 18%">MDF 25mm (18% desperdicio)</option>
+                        <option value="Madera Maciza 25mm - 25%">Madera Maciza 25mm (25% desperdicio)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Costo por m² ($)</label>
+                    <input type="number" id="costPerM2" placeholder="Precio del material" value="3000" step="100">
+                </div>
+
+                <h2 style="margin-top: 30px;">🎨 Multiplicadores</h2>
+
+                <div class="multiplier-group">
+                    <div class="multiplier-input">
+                        <label>Laqueado</label>
+                        <input type="number" id="multLaqueado" value="1.0" step="0.1" min="1.0">
+                    </div>
+                    <div class="multiplier-input">
+                        <label>Labor</label>
+                        <input type="number" id="multLabor" value="1.0" step="0.1" min="1.0">
+                    </div>
+                    <div class="multiplier-input">
+                        <label>Ganancia</label>
+                        <input type="number" id="multGanancia" value="1.5" step="0.1" min="1.0">
+                    </div>
+                </div>
+
+                <div class="component-section">
+                    <h2>🔧 Componentes</h2>
+                    <div id="componentsContainer"></div>
+
+                    <select id="componentType" style="margin-bottom: 12px;">
+                        <option value="">-- Selecciona componente --</option>
+                        <option value="Lateral">Lateral</option>
+                        <option value="Techo">Techo</option>
+                        <option value="Piso">Piso</option>
+                        <option value="Estante">Estante</option>
+                        <option value="Puerta">Puerta</option>
+                        <option value="Cajón">Cajón</option>
+                        <option value="Refuerzo">Refuerzo</option>
+                    </select>
+                    <button class="btn-add-component" onclick="agregarComponente()">+ Agregar Componente</button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Summary & Cost -->
+            <div class="card">
+                <h2>💰 Cálculo de Presupuesto</h2>
+
+                <div class="summary-section">
+                    <div class="summary-row-full">
+                        <span class="summary-label">Área base (m²):</span>
+                        <span class="summary-value" id="m2Base">0.00</span>
+                    </div>
+                    <div class="summary-row-full">
+                        <span class="summary-label">Desperdicio (m²):</span>
+                        <span class="summary-value" id="m2Desperdicio">0.00</span>
+                    </div>
+                    <div class="summary-row-full" style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 10px; margin-top: 10px;">
+                        <span class="summary-label">Total de placas (m²):</span>
+                        <span class="summary-value" id="m2Total">0.00</span>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 24px;">📊 Desglose de Costos</h2>
+
+                <div class="cost-breakdown" id="costBreakdown">
+                    <div class="cost-line">
+                        <span class="label">Material base</span>
+                        <span class="value" id="materialCost">$0.00</span>
+                    </div>
+                    <div class="cost-line">
+                        <span class="label">+ Laqueado (<span id="multLaqDisplay">1.0</span>x)</span>
+                        <span class="value" id="laqueadoCost">$0.00</span>
+                    </div>
+                    <div class="cost-line">
+                        <span class="label">+ Labor (<span id="multLabDisplay">1.0</span>x)</span>
+                        <span class="value" id="laborCost">$0.00</span>
+                    </div>
+                    <div class="cost-line total">
+                        <span class="label">Presupuesto Final (<span id="multGanDisplay">1.5</span>x)</span>
+                        <span class="value" id="presupuestoFinal">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="cambiarTab('info')">Info</button>
+                    <button class="tab-btn" onclick="cambiarTab('json')">JSON</button>
+                </div>
+
+                <div id="info" class="tab-content active">
+                    <div class="summary-section">
+                        <div class="summary-row-full" style="margin-bottom: 8px;">
+                            <strong>Resumen:</strong>
+                        </div>
+                        <div class="summary-row-full" style="font-size: 0.85rem; color: #bbb;">
+                            Se necesitan <span id="placasNeeded">0</span> placa(s) estándar (2.44m × 1.83m) para este proyecto.
+                        </div>
+                    </div>
+                </div>
+
+                <div id="json" class="tab-content">
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="guardarEnSheets()">💾 Guardar en Google Sheets</button>
+                    <button class="btn btn-secondary" onclick="limpiar()">🔄 Limpiar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://script.google.com/macros/d/AKfycbzz7g5bCDg8XvqB2fQ5tTa6E8vf4l0lhZmJmVL1qU6hQUCXVoAYRxJiHUdkDh0g3Hg/useFunctionByName?name=doPost';
+
+        let componentes = [];
+
+        function agregarComponente() {
+            const tipo = document.getElementById('componentType').value;
+            if (!tipo) {
+                alert('Selecciona un tipo de componente');
+                return;
+            }
+
+            const id = Date.now();
+            componentes.push({
+                id,
+                tipo,
+                qty: 1,
+                ancho: 100,
+                alto: 100,
+                profundo: 20
+            });
+
+            renderizarComponentes();
+            document.getElementById('componentType').value = '';
+            actualizarPresupuesto();
+        }
+
+        function renderizarComponentes() {
+            const container = document.getElementById('componentsContainer');
+
+            if (componentes.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-size: 0.9rem;">Sin componentes añadidos</p>';
+                return;
+            }
+
+            container.innerHTML = componentes.map(comp => `
+                <div class="component-item">
+                    <input type="number" value="${comp.qty}" min="1" onchange="actualizarComponente(${comp.id}, 'qty', this.value)">
+                    <input type="number" value="${comp.ancho}" placeholder="Ancho (cm)" onchange="actualizarComponente(${comp.id}, 'ancho', this.value)">
+                    <input type="number" value="${comp.alto}" placeholder="Alto (cm)" onchange="actualizarComponente(${comp.id}, 'alto', this.value)">
+                    <input type="number" value="${comp.profundo}" placeholder="Prof (cm)" onchange="actualizarComponente(${comp.id}, 'profundo', this.value)">
+                    <div class="m2-display">${calcularM2Componente(comp).toFixed(3)} m²</div>
+                    <button class="btn-remove" onclick="eliminarComponente(${comp.id})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function actualizarComponente(id, campo, valor) {
+            const comp = componentes.find(c => c.id === id);
+            if (comp) {
+                comp[campo] = parseFloat(valor) || 0;
+                renderizarComponentes();
+                actualizarPresupuesto();
+            }
+        }
+
+        function eliminarComponente(id) {
+            componentes = componentes.filter(c => c.id !== id);
+            renderizarComponentes();
+            actualizarPresupuesto();
+        }
+
+        function calcularM2Componente(comp) {
+            return (comp.qty * comp.ancho * comp.alto * comp.profundo) / 10000;
+        }
+
+        function obtenerDesperdicio() {
+            const material = document.getElementById('material').value;
+            const match = material.match(/(\d+)%/);
+            return match ? parseInt(match[1]) / 100 : 0.15;
+        }
+
+        function actualizarPresupuesto() {
+            // Calcular área
+            const m2Base = componentes.reduce((sum, comp) => sum + calcularM2Componente(comp), 0);
+            const desperdicio = obtenerDesperdicio();
+            const m2Desperdicio = m2Base * desperdicio;
+            const m2Total = m2Base + m2Desperdicio;
+
+            // Actualizar valores
+            document.getElementById('m2Base').textContent = m2Base.toFixed(3);
+            document.getElementById('m2Desperdicio').textContent = m2Desperdicio.toFixed(3);
+            document.getElementById('m2Total').textContent = m2Total.toFixed(3);
+
+            const costPerM2 = parseFloat(document.getElementById('costPerM2').value) || 0;
+            const materialCost = m2Total * costPerM2;
+
+            // Multiplicadores
+            const multLaq = parseFloat(document.getElementById('multLaqueado').value) || 1;
+            const multLab = parseFloat(document.getElementById('multLabor').value) || 1;
+            const multGan = parseFloat(document.getElementById('multGanancia').value) || 1;
+
+            // Actualizar displays
+            document.getElementById('multLaqDisplay').textContent = multLaq.toFixed(1);
+            document.getElementById('multLabDisplay').textContent = multLab.toFixed(1);
+            document.getElementById('multGanDisplay').textContent = multGan.toFixed(1);
+
+            // Costos
+            const laqueadoCost = materialCost * (multLaq - 1);
+            const laborCost = materialCost * (multLab - 1);
+            const subtotal = materialCost + laqueadoCost + laborCost;
+            const presupuestoFinal = subtotal * multGan;
+
+            document.getElementById('materialCost').textContent = '$' + materialCost.toLocaleString('es-AR', {maximumFractionDigits: 2});
+            document.getElementById('laqueadoCost').textContent = '$' + laqueadoCost.toLocaleString('es-AR', {maximumFractionDigits: 2});
+            document.getElementById('laborCost').textContent = '$' + laborCost.toLocaleString('es-AR', {maximumFractionDigits: 2});
+            document.getElementById('presupuestoFinal').textContent = '$' + presupuestoFinal.toLocaleString('es-AR', {maximumFractionDigits: 2});
+
+            // Placas necesarias
+            const placasEstandar = 4.46; // 2.44m × 1.83m
+            const placasNeeded = Math.ceil(m2Total / placasEstandar);
+            document.getElementById('placasNeeded').textContent = placasNeeded;
+
+            // JSON Output
+            const jsonData = {
+                cliente: document.getElementById('cliente').value,
+                tipoMueble: document.getElementById('tipoMueble').value,
+                dimensiones: document.getElementById('dimensiones').value,
+                material: document.getElementById('material').value,
+                costPerM2: costPerM2,
+                m2Base: parseFloat(m2Base.toFixed(3)),
+                m2Desperdicio: parseFloat(m2Desperdicio.toFixed(3)),
+                m2Total: parseFloat(m2Total.toFixed(3)),
+                materialCost: parseFloat(materialCost.toFixed(2)),
+                multLaqueado: multLaq,
+                multLabor: multLab,
+                multGanancia: multGan,
+                laqueadoCost: parseFloat(laqueadoCost.toFixed(2)),
+                laborCost: parseFloat(laborCost.toFixed(2)),
+                finalPrice: parseFloat(presupuestoFinal.toFixed(2)),
+                componentes: componentes
+            };
+
+            document.getElementById('jsonOutput').textContent = JSON.stringify(jsonData, null, 2);
+        }
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        async function guardarEnSheets() {
+            const cliente = document.getElementById('cliente').value || 'Sin especificar';
+            const costPerM2 = parseFloat(document.getElementById('costPerM2').value) || 0;
+            const m2Base = parseFloat(document.getElementById('m2Base').textContent) || 0;
+            const m2Desperdicio = parseFloat(document.getElementById('m2Desperdicio').textContent) || 0;
+            const m2Total = parseFloat(document.getElementById('m2Total').textContent) || 0;
+            const materialCost = m2Total * costPerM2;
+
+            const multLaq = parseFloat(document.getElementById('multLaqueado').value) || 1;
+            const multLab = parseFloat(document.getElementById('multLabor').value) || 1;
+            const multGan = parseFloat(document.getElementById('multGanancia').value) || 1;
+
+            const laqueadoCost = materialCost * (multLaq - 1);
+            const laborCost = materialCost * (multLab - 1);
+            const subtotal = materialCost + laqueadoCost + laborCost;
+            const finalPrice = subtotal * multGan;
+
+            const datos = {
+                cliente: cliente,
+                tipoMueble: document.getElementById('tipoMueble').value,
+                dimensiones: document.getElementById('dimensiones').value,
+                material: document.getElementById('material').value,
+                m2Base: parseFloat(m2Base.toFixed(3)),
+                m2Desperdicio: parseFloat(m2Desperdicio.toFixed(3)),
+                m2Total: parseFloat(m2Total.toFixed(3)),
+                costPerM2: costPerM2,
+                materialCost: parseFloat(materialCost.toFixed(2)),
+                multLaqueado: multLaq,
+                multLabor: multLab,
+                multGanancia: multGan,
+                finalPrice: parseFloat(finalPrice.toFixed(2))
+            };
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await response.json();
+
+                if (resultado.success) {
+                    mostrarMensaje('✅ Presupuesto guardado exitosamente', 'success');
+                } else {
+                    mostrarMensaje('❌ Error al guardar: ' + resultado.message, 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function mostrarMensaje(msg, tipo) {
+            const msgDiv = tipo === 'success' ? document.getElementById('successMsg') : document.getElementById('errorMsg');
+            const otroDiv = tipo === 'success' ? document.getElementById('errorMsg') : document.getElementById('successMsg');
+
+            msgDiv.textContent = msg;
+            msgDiv.style.display = 'block';
+            otroDiv.style.display = 'none';
+
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function limpiar() {
+            document.getElementById('cliente').value = '';
+            document.getElementById('tipoMueble').value = 'Custom';
+            document.getElementById('dimensiones').value = '';
+            document.getElementById('material').value = 'Melamina 18mm - 15%';
+            document.getElementById('costPerM2').value = '3000';
+            document.getElementById('multLaqueado').value = '1.0';
+            document.getElementById('multLabor').value = '1.0';
+            document.getElementById('multGanancia').value = '1.5';
+            componentes = [];
+            renderizarComponentes();
+            actualizarPresupuesto();
+        }
+
+        // Agregar event listeners para actualizacion en tiempo real
+        document.getElementById('cliente').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('tipoMueble').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('dimensiones').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('material').addEventListener('change', actualizarPresupuesto);
+        document.getElementById('costPerM2').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('multLaqueado').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('multLabor').addEventListener('input', actualizarPresupuesto);
+        document.getElementById('multGanancia').addEventListener('input', actualizarPresupuesto);
+
+        // Inicializar
+        actualizarPresupuesto();
+    </script>
+</body>
+</html>
