@@ -5,80 +5,84 @@ import { Badge } from '@/components/ui/badge';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
-import { Loader2, Target, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { Loader2, Target, TrendingUp, AlertTriangle, Package } from 'lucide-react';
 
-const COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'];
-const ESTADO_COLORS = {
-  'SIN_RESPUESTA': '#9ca3af',
-  'ESPERAMOS_RESPUESTA': '#3b82f6',
-  'COTIZACION_ENVIADA': '#f59e0b',
-  'QUOTE_ACCEPTED': '#10b981',
-  'ACCEPTED': '#3b82f6',
-  'IN_PRODUCTION': '#f59e0b',
-  'COMPLETED': '#8b5cf6',
-  'DELIVERED': '#10b981',
+const COLORS = ['#f59e0b', '#3b82f6', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4', '#6366f1', '#10b981'];
+const PRIORIDAD_COLORS = {
+  'ALTA': '#ef4444',
+  'MEDIA': '#eab308',
+  'BAJA': '#22c55e',
 };
 
 export default function Dashboards() {
-  // Fetch all dashboard data
-  const { data: summary } = useQuery({
-    queryKey: ['dashboards-summary'],
-    queryFn: () => dashboardsAPI.summary(),
+  // Fetch potenciales summary
+  const { data: potencialesResumen = {} } = useQuery({
+    queryKey: ['dashboards-potenciales-resumen'],
+    queryFn: async () => {
+      const res = await fetch('/api/v1/dashboards/potenciales/resumen');
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
+  // Fetch funnel
   const { data: funnel = {} } = useQuery({
     queryKey: ['dashboards-funnel'],
-    queryFn: () => dashboardsAPI.funnelPotenciales(),
+    queryFn: async () => {
+      const res = await fetch('/api/v1/dashboards/potenciales/funnel');
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
-  const { data: valueByStatus = {} } = useQuery({
-    queryKey: ['dashboards-value-by-status'],
-    queryFn: () => dashboardsAPI.valueByStatus(),
+  // Fetch prioridad distribution
+  const { data: prioridadData = {} } = useQuery({
+    queryKey: ['dashboards-prioridad'],
+    queryFn: async () => {
+      const res = await fetch('/api/v1/dashboards/potenciales/por-prioridad');
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
-  const { data: timeline = [] } = useQuery({
-    queryKey: ['dashboards-timeline'],
-    queryFn: () => dashboardsAPI.timelineProduccion(),
+  // Fetch producción summary
+  const { data: produccionResumen = {} } = useQuery({
+    queryKey: ['dashboards-produccion-resumen'],
+    queryFn: async () => {
+      const res = await fetch('/api/v1/dashboards/produccion/resumen');
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
   // Prepare chart data
-  const funnelData = Object.entries(funnel).map(([key, value]) => ({
-    name: key.replace(/_/g, ' '),
-    count: value as number,
-  }));
+  const funnelData = funnel && funnel.SIN_RESPUESTA !== undefined ? [
+    { name: 'Sin Respuesta', count: funnel.SIN_RESPUESTA || 0 },
+    { name: 'Esperamos Respuesta', count: funnel.ESPERAMOS_RESPUESTA || 0 },
+    { name: 'Cotización Enviada', count: funnel.COTIZACION_ENVIADA || 0 },
+    { name: 'Cliente', count: funnel.CLIENTE || 0 },
+  ] : [];
 
-  const valueData = Object.entries(valueByStatus).map(([key, value]) => ({
-    name: key.replace(/_/g, ' '),
-    value: value as number,
-  }));
+  const prioridadChartData = prioridadData && prioridadData.ALTA !== undefined ? [
+    { name: 'ALTA', value: prioridadData.ALTA || 0 },
+    { name: 'MEDIA', value: prioridadData.MEDIA || 0 },
+    { name: 'BAJA', value: prioridadData.BAJA || 0 },
+  ] : [];
 
-  const timelineChartData = timeline.slice(0, 10).map(item => ({
-    ordenId: item.orden_id,
-    cliente: item.cliente,
-    inicio: new Date(item.fecha_inicio).getTime(),
-    entrega: item.fecha_entrega_est ? new Date(item.fecha_entrega_est).getTime() : null,
-    dias: item.dias_produccion || 0,
-  }));
+  const totalPotenciales = potencialesResumen?.total || 0;
+  const clientesConvertidos = funnel?.CLIENTE || 0;
+  const conversionRate = totalPotenciales > 0 ? ((clientesConvertidos / totalPotenciales) * 100).toFixed(1) : 0;
 
-  if (!summary) {
+  if (!potencialesResumen || !produccionResumen) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -87,64 +91,60 @@ export default function Dashboards() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboards</h1>
         <p className="text-gray-600 mt-2">Análisis consolidado de potenciales y producción</p>
       </div>
 
       {/* Main KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Potenciales</CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{summary.total_potenciales}</div>
+            <div className="text-3xl font-bold">{totalPotenciales}</div>
             <p className="text-xs text-gray-600 mt-2">En pipeline</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Tasa Conversión</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{summary.conversion_rate.toFixed(1)}%</div>
-            <p className="text-xs text-gray-600 mt-2">Potencial a Producción</p>
+            <div className="text-3xl font-bold">{conversionRate}%</div>
+            <p className="text-xs text-gray-600 mt-2">Convertidos a Cliente</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total Estimado</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-500" />
+            <CardTitle className="text-sm font-medium">Total Producción</CardTitle>
+            <Package className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              ARS {(summary.total_estimated_value / 1000).toFixed(0)}k
-            </div>
-            <p className="text-xs text-gray-600 mt-2">En potenciales</p>
+            <div className="text-3xl font-bold">{produccionResumen?.total || 0}</div>
+            <p className="text-xs text-gray-600 mt-2">Órdenes activas</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Realizados</CardTitle>
-            <Package className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm font-medium">Alertas</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              ARS {(summary.total_ingresos / 1000).toFixed(0)}k
-            </div>
-            <p className="text-xs text-gray-600 mt-2">Órdenes entregadas</p>
+            <div className="text-3xl font-bold">{produccionResumen?.alertas_sin_actualizar || 0}</div>
+            <p className="text-xs text-gray-600 mt-2">Sin actualizar >5 días</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Funnel and Value Charts */}
+      {/* Funnel and Prioridad Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Funnel Chart */}
         <Card>
@@ -153,165 +153,152 @@ export default function Dashboards() {
             <CardDescription>Potenciales por estado</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={funnelData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Value by Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Valor Estimado por Estado</CardTitle>
-            <CardDescription>Distribución de valor en potenciales</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={valueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip formatter={(value) => `ARS ${value.toLocaleString('es-AR')}`} />
-                <Bar dataKey="value" fill="#f59e0b" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Timeline and Production Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Production Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Timeline de Producción</CardTitle>
-            <CardDescription>Próximas {Math.min(10, timeline.length)} entregas</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {timelineChartData.length > 0 ? (
+            {funnelData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={timelineChartData}>
+                <BarChart data={funnelData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="ordenId" tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                   <YAxis />
-                  <Tooltip
-                    formatter={(value) => `${value} días`}
-                    labelFormatter={(label) => `Orden: ${label}`}
-                  />
-                  <Bar dataKey="dias" fill="#8b5cf6" />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-64 flex items-center justify-center text-gray-500">
-                No hay datos de timeline disponibles
+                Sin datos disponibles
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Summary Stats */}
+        {/* Prioridad Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Resumen Operacional</CardTitle>
-            <CardDescription>Métricas clave del negocio</CardDescription>
+            <CardTitle>Distribución por Prioridad</CardTitle>
+            <CardDescription>Potenciales actuales</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Total Órdenes en Producción</span>
-                <Badge variant="secondary">{summary.total_produccion}</Badge>
+          <CardContent className="pt-4">
+            {prioridadChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={prioridadChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {prioridadChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={PRIORIDAD_COLORS[entry.name as keyof typeof PRIORIDAD_COLORS] || '#8884d8'}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                Sin datos disponibles
               </div>
-
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Tasa de Conversión</span>
-                <Badge className="bg-green-100 text-green-800">
-                  {summary.conversion_rate.toFixed(1)}%
-                </Badge>
-              </div>
-
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Valor Promedio Potencial</span>
-                <span className="font-semibold">
-                  ARS {summary.total_potenciales > 0
-                    ? (summary.total_estimated_value / summary.total_potenciales).toLocaleString(
-                        'es-AR',
-                        { maximumFractionDigits: 0 }
-                      )
-                    : 0}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Valor Promedio Orden</span>
-                <span className="font-semibold">
-                  ARS {summary.total_produccion > 0
-                    ? (summary.total_ingresos / summary.total_produccion).toLocaleString('es-AR', {
-                        maximumFractionDigits: 0,
-                      })
-                    : 0}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Margen Operacional (Est.)</span>
-                <Badge variant="outline">Pendiente</Badge>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Performance Trends */}
+      {/* Estado Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>Análisis de Desempeño</CardTitle>
-          <CardDescription>Evolución de métricas clave</CardDescription>
+          <CardTitle>Desglose por Estado</CardTitle>
+          <CardDescription>Potenciales actuales en cada etapa</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600">Potenciales Sin Respuesta</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {Object.entries(funnel).find(([k]) => k === 'SIN_RESPUESTA')?.[1] || 0}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="space-y-2 p-3 bg-gray-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Sin Respuesta</p>
+              <p className="text-2xl font-bold text-gray-700">
+                {potencialesResumen.SIN_RESPUESTA || 0}
               </p>
-              <p className="text-xs text-gray-500">Requiere seguimiento</p>
             </div>
 
-            <div className="space-y-2 p-4 bg-orange-50 rounded-lg">
-              <p className="text-sm text-gray-600">En Cotización</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {Object.entries(funnel).find(([k]) => k === 'COTIZACION_ENVIADA')?.[1] || 0}
+            <div className="space-y-2 p-3 bg-orange-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Esperamos</p>
+              <p className="text-2xl font-bold text-orange-700">
+                {potencialesResumen.ESPERAMOS_RESPUESTA || 0}
               </p>
-              <p className="text-xs text-gray-500">Esperando decisión</p>
+            </div>
+
+            <div className="space-y-2 p-3 bg-blue-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Cotización</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {potencialesResumen.COTIZACION_ENVIADA || 0}
+              </p>
+            </div>
+
+            <div className="space-y-2 p-3 bg-green-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Clientes ✅</p>
+              <p className="text-2xl font-bold text-green-700">
+                {potencialesResumen.CLIENTE || 0}
+              </p>
+            </div>
+
+            <div className="space-y-2 p-3 bg-red-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Cerrar</p>
+              <p className="text-2xl font-bold text-red-700">
+                {potencialesResumen.CERRAR || 0}
+              </p>
+            </div>
+
+            <div className="space-y-2 p-3 bg-red-50 rounded-lg text-center">
+              <p className="text-xs text-gray-600">Recontactar</p>
+              <p className="text-2xl font-bold text-red-700">
+                {potencialesResumen.RECONTACTAR || 0}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Producción Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumen de Producción</CardTitle>
+          <CardDescription>Estado de órdenes activas</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="space-y-2 p-4 bg-orange-50 rounded-lg">
+              <p className="text-sm text-gray-600">Total Órdenes</p>
+              <p className="text-2xl font-bold text-orange-700">
+                {produccionResumen.total || 0}
+              </p>
             </div>
 
             <div className="space-y-2 p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-gray-600">Aceptadas</p>
-              <p className="text-2xl font-bold text-green-600">
-                {Object.entries(funnel).find(([k]) => k === 'QUOTE_ACCEPTED')?.[1] || 0}
+              <p className="text-sm text-gray-600">Finalizadas</p>
+              <p className="text-2xl font-bold text-green-700">
+                {produccionResumen.finalizados || 0}
               </p>
-              <p className="text-xs text-gray-500">Listas para producción</p>
             </div>
 
-            <div className="space-y-2 p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-gray-600">ROI (Estimado)</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {summary.total_ingresos > 0 && summary.total_estimated_value > 0
-                  ? (
-                      ((summary.total_ingresos - summary.total_estimated_value) /
-                        summary.total_estimated_value) *
-                      100
-                    ).toFixed(1)
-                  : 0}
-                %
+            <div className="space-y-2 p-4 bg-red-50 rounded-lg">
+              <p className="text-sm text-gray-600">Alertas >5 días</p>
+              <p className="text-2xl font-bold text-red-700">
+                {produccionResumen.alertas_sin_actualizar || 0}
               </p>
-              <p className="text-xs text-gray-500">Margen teórico</p>
+            </div>
+
+            <div className="space-y-2 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-600">Tasa Finalización</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {produccionResumen.total > 0
+                  ? ((produccionResumen.finalizados / produccionResumen.total) * 100).toFixed(0)
+                  : 0}%
+              </p>
             </div>
           </div>
         </CardContent>

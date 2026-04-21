@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { produccionAPI, type Produccion } from '../api/produccion';
-import { dashboardsAPI } from '../api/dashboards';
 import {
   Table,
   TableBody,
@@ -18,245 +17,242 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Package, TrendingUp, Calendar, DollarSign } from 'lucide-react';
+import { Search, AlertTriangle, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 
-const ESTADOS = [
-  { value: 'ACCEPTED', label: 'Aceptada', color: 'bg-blue-100 text-blue-800' },
-  { value: 'IN_PRODUCTION', label: 'En Producción', color: 'bg-orange-100 text-orange-800' },
-  { value: 'COMPLETED', label: 'Completada', color: 'bg-purple-100 text-purple-800' },
-  { value: 'DELIVERED', label: 'Entregada ✓', color: 'bg-green-100 text-green-800' },
+// 8 Estados válidos de PRODUCCION
+const ESTADOS_PRODUCCION = [
+  { value: 'PLANIFICACIÓN', label: 'Planificación', color: 'bg-orange-100 text-orange-800' },
+  { value: 'CARPINTERIA', label: 'Carpintería', color: 'bg-blue-100 text-blue-800' },
+  { value: 'LAQUEADO', label: 'Laqueado', color: 'bg-purple-100 text-purple-800' },
+  { value: 'RETIRO PARA REMODELAR', label: 'Retiro para Remodelar', color: 'bg-pink-100 text-pink-800' },
+  { value: 'PENDIENTE', label: 'Pendiente', color: 'bg-red-100 text-red-800' },
+  { value: 'POST VENTA', label: 'Post Venta', color: 'bg-cyan-100 text-cyan-800' },
+  { value: 'FIDELIZACION', label: 'Fidelización', color: 'bg-indigo-100 text-indigo-800' },
+  { value: 'FINALIZADO', label: 'Finalizado', color: 'bg-green-100 text-green-800' },
 ];
+
+interface Stats {
+  total: number;
+  finalizados: number;
+  alertas5Dias: number;
+}
 
 export default function Produccion() {
   const [filterEstado, setFilterEstado] = useState<string | undefined>();
   const [searchCliente, setSearchCliente] = useState('');
 
-  // Fetch produccion orders
-  const { data: ordenes = [], isLoading, error } = useQuery({
+  // Fetch producción
+  const { data: produccionData = { total: 0, items: [] }, isLoading } = useQuery({
     queryKey: ['produccion', filterEstado],
-    queryFn: () => produccionAPI.list(filterEstado),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filterEstado) params.append('estado', filterEstado);
+      const res = await fetch(`/api/v1/produccion?${params}`);
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
-  // Fetch timeline data
-  const { data: timelineData = [] } = useQuery({
-    queryKey: ['dashboards-timeline'],
-    queryFn: () => dashboardsAPI.timelineProduccion(),
-    refetchInterval: 30000,
-  });
-
-  // Fetch ingresos
-  const { data: ingresosData } = useQuery({
-    queryKey: ['dashboards-ingresos'],
-    queryFn: () => dashboardsAPI.ingresosTotal(),
-    refetchInterval: 30000,
-  });
+  const produccionItems = produccionData.items || [];
 
   // Calculate stats
-  const stats = {
-    total: ordenes.length,
-    enProduccion: ordenes.filter(o => o.estado === 'IN_PRODUCTION').length,
-    completadas: ordenes.filter(o => o.estado === 'COMPLETED').length,
-    entregadas: ordenes.filter(o => o.estado === 'DELIVERED').length,
-    totalIngresos: ingresosData?.total_ingresos || 0,
-    promedioDias: ordenes.length > 0
-      ? Math.round(
-          ordenes
-            .filter(o => o.fecha_entrega_est && o.fecha_inicio)
-            .reduce((sum, o) => {
-              const inicio = new Date(o.fecha_inicio).getTime();
-              const fin = new Date(o.fecha_entrega_est!).getTime();
-              return sum + (fin - inicio) / (1000 * 60 * 60 * 24);
-            }, 0) / ordenes.length
-        )
-      : 0,
-  };
+  const stats: Stats = useMemo(() => {
+    const total = produccionItems.length;
+    const finalizados = produccionItems.filter((p: Produccion) => p.estado === 'FINALIZADO').length;
 
-  // Filter ordenes
-  const filteredOrdenes = ordenes.filter(o =>
-    o.cliente.toLowerCase().includes(searchCliente.toLowerCase())
+    // Contar registros sin actualizar > 5 días
+    const now = new Date();
+    const alertas5Dias = produccionItems.filter((p: Produccion) => {
+      const updated = new Date(p.updated_at);
+      const diasDiferencia = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+      return diasDiferencia > 5;
+    }).length;
+
+    return {
+      total,
+      finalizados,
+      alertas5Dias,
+    };
+  }, [produccionItems]);
+
+  // Filter producción
+  const filteredProduccion = produccionItems.filter((p: Produccion) =>
+    p.cliente.toLowerCase().includes(searchCliente.toLowerCase()) ||
+    p.celular?.includes(searchCliente)
   );
 
   const getEstadoColor = (estado: string) => {
-    const found = ESTADOS.find(e => e.value === estado);
+    const found = ESTADOS_PRODUCCION.find(e => e.value === estado);
     return found?.color || 'bg-gray-100 text-gray-800';
   };
 
   const getEstadoLabel = (estado: string) => {
-    const found = ESTADOS.find(e => e.value === estado);
+    const found = ESTADOS_PRODUCCION.find(e => e.value === estado);
     return found?.label || estado;
   };
 
-  const calcularDias = (inicio: string, fin?: string) => {
-    if (!fin) return '-';
-    const start = new Date(inicio).getTime();
-    const end = new Date(fin).getTime();
-    const dias = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    return `${dias}d`;
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString('es-AR');
+  };
+
+  const getDiasDesdeActualizacion = (updatedAt: string) => {
+    const updated = new Date(updatedAt);
+    const now = new Date();
+    const diasDiferencia = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+    return diasDiferencia;
+  };
+
+  const getAlertaColor = (diasSinActualizar: number) => {
+    if (diasSinActualizar > 5) {
+      return 'bg-red-50'; // Fondo rojo si > 5 días
+    }
+    return 'hover:bg-gray-50';
+  };
+
+  const getAlertaBadge = (diasSinActualizar: number) => {
+    if (diasSinActualizar > 5) {
+      return (
+        <Badge className="bg-red-100 text-red-800">
+          ⚠️ {diasSinActualizar} días sin actualizar
+        </Badge>
+      );
+    }
+    if (diasSinActualizar >= 3) {
+      return (
+        <Badge className="bg-orange-100 text-orange-800">
+          ⚠️ {diasSinActualizar} días sin actualizar
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-gray-100 text-gray-800">
+        {diasSinActualizar} días
+      </Badge>
+    );
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Producción</h1>
-        <p className="text-gray-600 mt-2">Seguimiento de órdenes de producción y entregas</p>
+        <p className="text-gray-600 mt-2">Seguimiento de órdenes de producción</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Órdenes</CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
+            <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-gray-600">Órdenes en sistema</p>
+            <p className="text-xs text-gray-600">En seguimiento</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Producción</CardTitle>
-            <TrendingUp className="h-4 w-4 text-orange-500" />
+            <CardTitle className="text-sm font-medium">Finalizadas</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.enProduccion}</div>
-            <p className="text-xs text-gray-600">Activamente siendo producidas</p>
+            <div className="text-2xl font-bold">{stats.finalizados}</div>
+            <p className="text-xs text-gray-600">Completadas</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Completados</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">Alertas</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ARS {stats.totalIngresos.toLocaleString('es-AR')}
-            </div>
-            <p className="text-xs text-gray-600">Entregadas completadas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Promedio de Días</CardTitle>
-            <Calendar className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.promedioDias}d</div>
-            <p className="text-xs text-gray-600">Tiempo promedio producción</p>
+            <div className="text-2xl font-bold">{stats.alertas5Dias}</div>
+            <p className="text-xs text-gray-600">Sin actualizar >5 días</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Estado Breakdown */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Aceptadas', count: ordenes.filter(o => o.estado === 'ACCEPTED').length, color: 'text-blue-600' },
-          { label: 'En Producción', count: stats.enProduccion, color: 'text-orange-600' },
-          { label: 'Completadas', count: stats.completadas, color: 'text-purple-600' },
-          { label: 'Entregadas', count: stats.entregadas, color: 'text-green-600' },
-        ].map(item => (
-          <Card key={item.label}>
-            <CardContent className="pt-6">
-              <div className={`text-3xl font-bold ${item.color}`}>{item.count}</div>
-              <p className="text-sm text-gray-600 mt-1">{item.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-4">
-        <Input
-          placeholder="Buscar por cliente..."
-          value={searchCliente}
-          onChange={(e) => setSearchCliente(e.target.value)}
-          className="flex-1"
-        />
+      {/* Filters - Responsive Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar por cliente o celular..."
+            value={searchCliente}
+            onChange={(e) => setSearchCliente(e.target.value)}
+            className="pl-8"
+          />
+        </div>
         <Select value={filterEstado || ''} onValueChange={(v) => setFilterEstado(v || undefined)}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger>
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Todos los estados</SelectItem>
-            {ESTADOS.map(e => (
+            {ESTADOS_PRODUCCION.map(e => (
               <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Produccion Table */}
+      {/* Producción Table */}
       <Card>
         <CardHeader>
           <CardTitle>Órdenes de Producción</CardTitle>
-          <CardDescription>{filteredOrdenes.length} órdenes encontradas</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-              Error al cargar órdenes
-            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead>Orden ID</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Mueble</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Inicio</TableHead>
-                    <TableHead>Entrega Est.</TableHead>
-                    <TableHead>Días</TableHead>
-                    <TableHead>Precio Final</TableHead>
-                    <TableHead>Productor</TableHead>
+                    <TableHead className="whitespace-nowrap">Cliente</TableHead>
+                    <TableHead className="whitespace-nowrap">Celular</TableHead>
+                    <TableHead className="whitespace-nowrap">Descripción</TableHead>
+                    <TableHead className="whitespace-nowrap">Estado</TableHead>
+                    <TableHead className="whitespace-nowrap">Actualizado</TableHead>
+                    <TableHead className="whitespace-nowrap">Creado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrdenes.length === 0 ? (
+                  {filteredProduccion.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                         No hay órdenes encontradas
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredOrdenes.map(orden => (
-                      <TableRow key={orden.id} className="hover:bg-gray-50">
-                        <TableCell className="font-mono font-semibold">{orden.orden_id}</TableCell>
-                        <TableCell className="font-medium">{orden.cliente}</TableCell>
-                        <TableCell>{orden.mueble}</TableCell>
-                        <TableCell>
-                          <Badge className={getEstadoColor(orden.estado)}>
-                            {getEstadoLabel(orden.estado)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(orden.fecha_inicio).toLocaleDateString('es-AR')}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {orden.fecha_entrega_est
-                            ? new Date(orden.fecha_entrega_est).toLocaleDateString('es-AR')
-                            : '-'}
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          {calcularDias(orden.fecha_inicio, orden.fecha_entrega_est)}
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          ARS {orden.precio_final.toLocaleString('es-AR')}
-                        </TableCell>
-                        <TableCell>{orden.productor}</TableCell>
-                      </TableRow>
-                    ))
+                    filteredProduccion.map((orden: Produccion) => {
+                      const diasSinActualizar = getDiasDesdeActualizacion(orden.updated_at);
+                      return (
+                        <TableRow
+                          key={orden.id}
+                          className={`cursor-pointer ${getAlertaColor(diasSinActualizar)}`}
+                        >
+                          <TableCell className="font-medium">{orden.cliente}</TableCell>
+                          <TableCell className="text-sm">{orden.celular || '-'}</TableCell>
+                          <TableCell className="text-sm">{orden.descripcion_breve || '-'}</TableCell>
+                          <TableCell>
+                            <Badge className={getEstadoColor(orden.estado)}>
+                              {getEstadoLabel(orden.estado)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getAlertaBadge(diasSinActualizar)}
+                          </TableCell>
+                          <TableCell className="text-sm">{formatFecha(orden.created_at)}</TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

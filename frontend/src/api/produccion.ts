@@ -1,59 +1,50 @@
-import api from './client';
-
 export interface Produccion {
   id: number;
-  orden_id: string;
   cliente: string;
-  mueble: string;
-  estado: 'ACCEPTED' | 'IN_PRODUCTION' | 'COMPLETED' | 'DELIVERED';
-  fecha_inicio: string;
-  fecha_entrega_est?: string;
-  productor: string;
-  costo_real: number;
-  precio_final: number;
-  notas?: string;
-  potencial_id?: number;
-  created_at: string;
-  updated_at: string;
+  celular?: string;
+  descripcion_breve?: string;
+  estado: 'PLANIFICACIÓN' | 'CARPINTERIA' | 'LAQUEADO' | 'RETIRO PARA REMODELAR' | 'PENDIENTE' | 'POST VENTA' | 'FIDELIZACION' | 'FINALIZADO';
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
 }
 
-export interface ProduccionCreate {
-  orden_id: string;
-  cliente: string;
-  mueble: string;
-  estado?: string;
-  fecha_inicio: string;
-  fecha_entrega_est?: string;
-  productor: string;
-  costo_real: number;
-  precio_final: number;
-  notas?: string;
-  potencial_id?: number;
-}
-
-export interface ProduccionUpdate {
-  orden_id?: string;
-  cliente?: string;
-  mueble?: string;
-  estado?: string;
-  fecha_inicio?: string;
-  fecha_entrega_est?: string;
-  productor?: string;
-  costo_real?: number;
-  precio_final?: number;
-  notas?: string;
+export interface ProduccionListResponse {
+  total: number;
+  items: Produccion[];
 }
 
 export const produccionAPI = {
-  list: (estado?: string) =>
-    api.get<Produccion[]>('/produccion', { params: { estado } }).then(r => r.data),
+  list: async (filterEstado?: string): Promise<ProduccionListResponse> => {
+    const params = new URLSearchParams();
+    if (filterEstado) params.append('estado', filterEstado);
+    const res = await fetch(`/api/v1/produccion?${params}`);
+    return res.json();
+  },
 
-  getById: (orden_id: string) =>
-    api.get<Produccion>(`/produccion/${orden_id}`).then(r => r.data),
+  getById: async (id: number): Promise<Produccion> => {
+    const res = await fetch(`/api/v1/produccion/${id}`);
+    return res.json();
+  },
 
-  create: (data: ProduccionCreate) =>
-    api.post<Produccion>('/produccion', data).then(r => r.data),
+  create: async (data: Omit<Produccion, 'id' | 'created_at' | 'updated_at'>): Promise<Produccion> => {
+    const res = await fetch('/api/v1/produccion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
 
-  update: (orden_id: string, data: ProduccionUpdate) =>
-    api.put<Produccion>(`/produccion/${orden_id}`, data).then(r => r.data),
+  update: async (id: number, data: Partial<Produccion>): Promise<Produccion> => {
+    const res = await fetch(`/api/v1/produccion/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await fetch(`/api/v1/produccion/${id}`, { method: 'DELETE' });
+  },
 };

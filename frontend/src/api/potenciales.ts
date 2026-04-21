@@ -1,58 +1,55 @@
-import api from './client';
-
 export interface Potencial {
   id: number;
   nombre: string;
   mueble: string;
-  fecha_contacto: string;
-  estado: 'SIN_RESPUESTA' | 'ESPERAMOS_RESPUESTA' | 'COTIZACION_ENVIADA' | 'QUOTE_ACCEPTED';
-  quien_lo_tiene: string;
-  telefono: string;
-  nota?: string;
-  fecha_seguimiento?: string;
-  valor_estimado: number;
-  orden_id_asignada?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PotencialCreate {
-  nombre: string;
-  mueble: string;
-  fecha_contacto: string;
-  estado?: string;
-  quien_lo_tiene: string;
-  telefono: string;
-  nota?: string;
-  fecha_seguimiento?: string;
-  valor_estimado: number;
-}
-
-export interface PotencialUpdate {
-  nombre?: string;
-  mueble?: string;
-  fecha_contacto?: string;
-  estado?: string;
+  celular?: string;
+  fecha: string; // ISO date
+  estado: 'SIN_RESPUESTA' | 'ESPERAMOS_RESPUESTA' | 'COTIZACION_ENVIADA' | 'CLIENTE' | 'CERRAR' | 'RECONTACTAR';
   quien_lo_tiene?: string;
-  telefono?: string;
-  nota?: string;
-  fecha_seguimiento?: string;
-  valor_estimado?: number;
+  fecha_seguimiento?: string; // ISO date
+  prioridad: 'ALTA' | 'MEDIA' | 'BAJA';
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+}
+
+export interface PotencialListResponse {
+  total: number;
+  items: Potencial[];
 }
 
 export const potencialesAPI = {
-  list: (estado?: string) =>
-    api.get<Potencial[]>('/potenciales', { params: { estado } }).then(r => r.data),
+  list: async (filterEstado?: string, filterPrioridad?: string): Promise<PotencialListResponse> => {
+    const params = new URLSearchParams();
+    if (filterEstado) params.append('estado', filterEstado);
+    if (filterPrioridad) params.append('prioridad', filterPrioridad);
+    const res = await fetch(`/api/v1/potenciales?${params}`);
+    return res.json();
+  },
 
-  getById: (id: number) =>
-    api.get<Potencial>(`/potenciales/${id}`).then(r => r.data),
+  getById: async (id: number): Promise<Potencial> => {
+    const res = await fetch(`/api/v1/potenciales/${id}`);
+    return res.json();
+  },
 
-  create: (data: PotencialCreate) =>
-    api.post<Potencial>('/potenciales', data).then(r => r.data),
+  create: async (data: Omit<Potencial, 'id' | 'created_at' | 'updated_at'>): Promise<Potencial> => {
+    const res = await fetch('/api/v1/potenciales', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
 
-  update: (id: number, data: PotencialUpdate) =>
-    api.put<Potencial>(`/potenciales/${id}`, data).then(r => r.data),
+  update: async (id: number, data: Partial<Potencial>): Promise<Potencial> => {
+    const res = await fetch(`/api/v1/potenciales/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
 
-  convertToProduccion: (id: number) =>
-    api.post(`/potenciales/${id}/convert`, {}).then(r => r.data),
+  delete: async (id: number): Promise<void> => {
+    await fetch(`/api/v1/potenciales/${id}`, { method: 'DELETE' });
+  },
 };

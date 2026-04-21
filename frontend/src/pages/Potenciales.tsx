@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { potencialesAPI, type Potencial } from '../api/potenciales';
 import { dashboardsAPI } from '../api/dashboards';
 import {
@@ -19,15 +19,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowRight, TrendingUp, Target, DollarSign, Clock } from 'lucide-react';
+import { Search, TrendingUp, Target, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
+// Estados con colores actualizados
 const ESTADOS = [
   { value: 'SIN_RESPUESTA', label: 'Sin Respuesta', color: 'bg-gray-100 text-gray-800' },
-  { value: 'ESPERAMOS_RESPUESTA', label: 'Esperamos Respuesta', color: 'bg-blue-100 text-blue-800' },
-  { value: 'COTIZACION_ENVIADA', label: 'Cotización Enviada', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'QUOTE_ACCEPTED', label: 'Quote Accepted ✓', color: 'bg-green-100 text-green-800' },
+  { value: 'ESPERAMOS_RESPUESTA', label: 'Esperamos Respuesta', color: 'bg-orange-100 text-orange-800' },
+  { value: 'COTIZACION_ENVIADA', label: 'Cotización Enviada', color: 'bg-blue-100 text-blue-800' },
+  { value: 'CLIENTE', label: '✅ Cliente', color: 'bg-green-100 text-green-800' },
+  { value: 'CERRAR', label: 'Cerrar', color: 'bg-red-100 text-red-800' },
+  { value: 'RECONTACTAR', label: 'Recontactar', color: 'bg-red-100 text-red-800' },
+];
+
+const PRIORIDADES = [
+  { value: 'ALTA', label: 'ALTA', color: 'bg-red-100 text-red-800' },
+  { value: 'MEDIA', label: 'MEDIA', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'BAJA', label: 'BAJA', color: 'bg-green-100 text-green-800' },
 ];
 
 interface Stats {
@@ -35,70 +44,69 @@ interface Stats {
   sinRespuesta: number;
   esperamos: number;
   cotizacion: number;
-  accepted: number;
+  clientes: number;
   conversionRate: number;
-  totalValue: number;
+  cerrar: number;
+  recontactar: number;
 }
 
 export default function Potenciales() {
-  const queryClient = useQueryClient();
   const [filterEstado, setFilterEstado] = useState<string | undefined>();
+  const [filterPrioridad, setFilterPrioridad] = useState<string | undefined>();
   const [searchName, setSearchName] = useState('');
 
   // Fetch potenciales
-  const { data: potenciales = [], isLoading, error } = useQuery({
-    queryKey: ['potenciales', filterEstado],
-    queryFn: () => potencialesAPI.list(filterEstado),
-    refetchInterval: 30000, // Refresh every 30 seconds
+  const { data: potencialesData = { total: 0, items: [] }, isLoading } = useQuery({
+    queryKey: ['potenciales', filterEstado, filterPrioridad],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filterEstado) params.append('estado', filterEstado);
+      if (filterPrioridad) params.append('prioridad', filterPrioridad);
+      const res = await fetch(`/api/v1/potenciales?${params}`);
+      return res.json();
+    },
+    refetchInterval: 30000,
   });
+
+  const potenciales = potencialesData.items || [];
 
   // Fetch conversion rate
   const { data: conversionData } = useQuery({
     queryKey: ['dashboards-conversion-rate'],
-    queryFn: () => dashboardsAPI.conversionRate(),
-    refetchInterval: 30000,
-  });
-
-  // Fetch value by status
-  const { data: valueByStatus = {} } = useQuery({
-    queryKey: ['dashboards-value-by-status'],
-    queryFn: () => dashboardsAPI.valueByStatus(),
-    refetchInterval: 30000,
-  });
-
-  // Convert mutation
-  const convertMutation = useMutation({
-    mutationFn: (id: number) => potencialesAPI.convertToProduccion(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['potenciales'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboards-conversion-rate'] });
+    queryFn: async () => {
+      const res = await fetch('/api/v1/dashboards/potenciales/conversion-rate');
+      return res.json();
     },
+    refetchInterval: 30000,
   });
 
   // Calculate stats
   const stats: Stats = useMemo(() => {
     const total = potenciales.length;
-    const sinRespuesta = potenciales.filter(p => p.estado === 'SIN_RESPUESTA').length;
-    const esperamos = potenciales.filter(p => p.estado === 'ESPERAMOS_RESPUESTA').length;
-    const cotizacion = potenciales.filter(p => p.estado === 'COTIZACION_ENVIADA').length;
-    const accepted = potenciales.filter(p => p.estado === 'QUOTE_ACCEPTED').length;
-    const conversionRate = total > 0 ? (accepted / total) * 100 : 0;
-    const totalValue = potenciales.reduce((sum, p) => sum + p.valor_estimado, 0);
+    const sinRespuesta = potenciales.filter((p: Potencial) => p.estado === 'SIN_RESPUESTA').length;
+    const esperamos = potenciales.filter((p: Potencial) => p.estado === 'ESPERAMOS_RESPUESTA').length;
+    const cotizacion = potenciales.filter((p: Potencial) => p.estado === 'COTIZACION_ENVIADA').length;
+    const clientes = potenciales.filter((p: Potencial) => p.estado === 'CLIENTE').length;
+    const cerrar = potenciales.filter((p: Potencial) => p.estado === 'CERRAR').length;
+    const recontactar = potenciales.filter((p: Potencial) => p.estado === 'RECONTACTAR').length;
+    const conversionRate = total > 0 ? (clientes / total) * 100 : 0;
 
     return {
       total,
       sinRespuesta,
       esperamos,
       cotizacion,
-      accepted,
+      clientes,
       conversionRate,
-      totalValue,
+      cerrar,
+      recontactar,
     };
   }, [potenciales]);
 
   // Filter potenciales
-  const filteredPotenciales = potenciales.filter(p =>
-    p.nombre.toLowerCase().includes(searchName.toLowerCase())
+  const filteredPotenciales = potenciales.filter((p: Potencial) =>
+    (p.nombre.toLowerCase().includes(searchName.toLowerCase()) ||
+     p.celular?.includes(searchName))
   );
 
   const getEstadoColor = (estado: string) => {
@@ -111,15 +119,29 @@ export default function Potenciales() {
     return found?.label || estado;
   };
 
+  const getPrioridadColor = (prioridad: string) => {
+    const found = PRIORIDADES.find(p => p.value === prioridad);
+    return found?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const getPrioridadLabel = (prioridad: string) => {
+    const found = PRIORIDADES.find(p => p.value === prioridad);
+    return found?.label || prioridad;
+  };
+
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString('es-AR');
+  };
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Potenciales</h1>
         <p className="text-gray-600 mt-2">Gestión de clientes potenciales y seguimiento de ventas</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Potenciales</CardTitle>
@@ -133,111 +155,51 @@ export default function Potenciales() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Clientes ✅</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.clientes}</div>
+            <p className="text-xs text-gray-600">Convertidos</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tasa Conversión</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-gray-600">{stats.accepted} de {stats.total}</p>
+            <p className="text-xs text-gray-600">{stats.clientes} de {stats.total}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total Estimado</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-500" />
+            <CardTitle className="text-sm font-medium">Esperando Respuesta</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">ARS {stats.totalValue.toLocaleString('es-AR')}</div>
-            <p className="text-xs text-gray-600">Valor combinado</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Cotización</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.cotizacion}</div>
-            <p className="text-xs text-gray-600">Esperando respuesta</p>
+            <div className="text-2xl font-bold">{stats.esperamos}</div>
+            <p className="text-xs text-gray-600">Requieren seguimiento</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Funnel Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Funnel de Conversión</CardTitle>
-          <CardDescription>Estado de los potenciales en el pipeline</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Sin Respuesta</span>
-              <div className="flex items-center gap-2">
-                <div className="w-48 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gray-400 h-2 rounded-full"
-                    style={{ width: `${(stats.sinRespuesta / stats.total) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-semibold w-12 text-right">{stats.sinRespuesta}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Esperamos Respuesta</span>
-              <div className="flex items-center gap-2">
-                <div className="w-48 bg-blue-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-400 h-2 rounded-full"
-                    style={{ width: `${(stats.esperamos / stats.total) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-semibold w-12 text-right">{stats.esperamos}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Cotización Enviada</span>
-              <div className="flex items-center gap-2">
-                <div className="w-48 bg-yellow-200 rounded-full h-2">
-                  <div
-                    className="bg-yellow-400 h-2 rounded-full"
-                    style={{ width: `${(stats.cotizacion / stats.total) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-semibold w-12 text-right">{stats.cotizacion}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Quote Accepted ✓</span>
-              <div className="flex items-center gap-2">
-                <div className="w-48 bg-green-200 rounded-full h-2">
-                  <div
-                    className="bg-green-400 h-2 rounded-full"
-                    style={{ width: `${(stats.accepted / stats.total) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-semibold w-12 text-right">{stats.accepted}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters */}
-      <div className="flex gap-4">
-        <Input
-          placeholder="Buscar por nombre..."
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-          className="flex-1"
-        />
+      {/* Filters - Responsive Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar por nombre o celular..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            className="pl-8"
+          />
+        </div>
         <Select value={filterEstado || ''} onValueChange={(v) => setFilterEstado(v || undefined)}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger>
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
@@ -247,35 +209,41 @@ export default function Potenciales() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={filterPrioridad || ''} onValueChange={(v) => setFilterPrioridad(v || undefined)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filtrar por prioridad" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todas las prioridades</SelectItem>
+            {PRIORIDADES.map(p => (
+              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Potenciales Table */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Potenciales</CardTitle>
-          <CardDescription>{filteredPotenciales.length} potenciales encontrados</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-              Error al cargar potenciales
-            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Mueble</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Valor Est.</TableHead>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead>Acciones</TableHead>
+                    <TableHead className="whitespace-nowrap">Nombre</TableHead>
+                    <TableHead className="whitespace-nowrap">Mueble</TableHead>
+                    <TableHead className="whitespace-nowrap">Celular</TableHead>
+                    <TableHead className="whitespace-nowrap">Estado</TableHead>
+                    <TableHead className="whitespace-nowrap">Prioridad</TableHead>
+                    <TableHead className="whitespace-nowrap">Fecha</TableHead>
+                    <TableHead className="whitespace-nowrap">Vendedor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -286,43 +254,23 @@ export default function Potenciales() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredPotenciales.map(potencial => (
-                      <TableRow key={potencial.id} className="hover:bg-gray-50">
+                    filteredPotenciales.map((potencial: Potencial) => (
+                      <TableRow key={potencial.id} className="hover:bg-gray-50 cursor-pointer">
                         <TableCell className="font-medium">{potencial.nombre}</TableCell>
-                        <TableCell>{potencial.mueble}</TableCell>
+                        <TableCell className="text-sm">{potencial.mueble}</TableCell>
+                        <TableCell className="text-sm">{potencial.celular || '-'}</TableCell>
                         <TableCell>
                           <Badge className={getEstadoColor(potencial.estado)}>
                             {getEstadoLabel(potencial.estado)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(potencial.fecha_contacto).toLocaleDateString('es-AR')}
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          ARS {potencial.valor_estimado.toLocaleString('es-AR')}
-                        </TableCell>
-                        <TableCell>{potencial.quien_lo_tiene}</TableCell>
                         <TableCell>
-                          {potencial.estado === 'COTIZACION_ENVIADA' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => convertMutation.mutate(potencial.id)}
-                              disabled={convertMutation.isPending}
-                              className="gap-1"
-                            >
-                              {convertMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <ArrowRight className="h-4 w-4" />
-                              )}
-                              Convertir
-                            </Button>
-                          )}
-                          {potencial.estado === 'QUOTE_ACCEPTED' && (
-                            <Badge className="bg-green-200 text-green-800">Convertido</Badge>
-                          )}
+                          <Badge className={getPrioridadColor(potencial.prioridad)}>
+                            {getPrioridadLabel(potencial.prioridad)}
+                          </Badge>
                         </TableCell>
+                        <TableCell className="text-sm">{formatFecha(potencial.fecha)}</TableCell>
+                        <TableCell className="text-sm">{potencial.quien_lo_tiene || '-'}</TableCell>
                       </TableRow>
                     ))
                   )}

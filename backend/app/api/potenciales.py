@@ -1,21 +1,31 @@
-from fastapi import APIRouter, HTTPException, Depends
+"""
+Endpoints para gestión de POTENCIALES
+Sincronizado con Google Sheets hoja "POTENCIALES"
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from datetime import datetime, timezone
 from app.models.potencial import Potencial
-from app.schemas.potencial import PotencialCreate, PotencialUpdate, PotencialResponse
+from app.schemas.potencial import (
+    PotencialCreate,
+    PotencialUpdate,
+    PotencialResponse,
+    PotencialListResponse,
+)
 from app.database import get_db
-from typing import List, Optional
+from typing import Optional
 
 router = APIRouter(prefix="/api/v1/potenciales", tags=["potenciales"])
 
 
-@router.post("", response_model=PotencialResponse)
-async def create_potencial(
+@router.post("", response_model=PotencialResponse, summary="Crear nuevo potencial")
+async def crear_potencial(
     potencial: PotencialCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Create new potencial"""
+    """Crear un nuevo potencial"""
     try:
         db_potencial = Potencial(**potencial.dict())
         db.add(db_potencial)
@@ -24,54 +34,66 @@ async def create_potencial(
         return db_potencial
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Error al crear potencial: {str(e)}")
 
 
-@router.get("", response_model=List[PotencialResponse])
-async def list_potenciales(
-    estado: Optional[str] = None,
+@router.get("", response_model=PotencialListResponse, summary="Listar potenciales")
+async def listar_potenciales(
+    estado: Optional[str] = Query(None, description="Filtrar por estado"),
+    prioridad: Optional[str] = Query(None, description="Filtrar por prioridad"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
 ):
-    """List all potenciales, optionally filtered by estado"""
+    """Listar todos los potenciales con filtros opcionales"""
+    query = select(Potencial)
+
     if estado:
-        stmt = select(Potencial).where(Potencial.estado == estado)
-    else:
-        stmt = select(Potencial)
+        query = query.where(Potencial.estado == estado)
+    if prioridad:
+        query = query.where(Potencial.prioridad == prioridad)
 
-    result = await db.execute(stmt)
+    # Obtener total
+    count_result = await db.execute(select(Potencial))
+    total = len(count_result.scalars().all())
+
+    # Obtener datos paginados
+    query = query.order_by(desc(Potencial.updated_at)).offset(skip).limit(limit)
+    result = await db.execute(query)
     potenciales = result.scalars().all()
-    return potenciales
+
+    return PotencialListResponse(total=total, items=potenciales)
 
 
-@router.get("/{potencial_id}", response_model=PotencialResponse)
-async def get_potencial(
+@router.get("/{potencial_id}", response_model=PotencialResponse, summary="Obtener potencial por ID")
+async def obtener_potencial(
     potencial_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get potencial by ID"""
+    """Obtener un potencial específico por su ID"""
     stmt = select(Potencial).where(Potencial.id == potencial_id)
     result = await db.execute(stmt)
     potencial = result.scalar_one_or_none()
 
     if not potencial:
-        raise HTTPException(status_code=404, detail="Potencial not found")
+        raise HTTPException(status_code=404, detail="Potencial no encontrado")
 
     return potencial
 
 
-@router.put("/{potencial_id}", response_model=PotencialResponse)
-async def update_potencial(
+@router.put("/{potencial_id}", response_model=PotencialResponse, summary="Actualizar potencial")
+async def actualizar_potencial(
     potencial_id: int,
     potencial_update: PotencialUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Update potencial"""
+    """Actualizar un potencial existente"""
     stmt = select(Potencial).where(Potencial.id == potencial_id)
     result = await db.execute(stmt)
     db_potencial = result.scalar_one_or_none()
 
     if not db_potencial:
-        raise HTTPException(status_code=404, detail="Potencial not found")
+        raise HTTPException(status_code=404, detail="Potencial no encontrado")
 
     update_data = potencial_update.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -83,29 +105,20 @@ async def update_potencial(
     return db_potencial
 
 
-@router.post("/{potencial_id}/convert")
-async def convert_to_produccion(
+@router.delete("/{potencial_id}", summary="Eliminar potencial")
+async def eliminar_potencial(
     potencial_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Convert POTENCIAL to PRODUCCION (QUOTE_ACCEPTED)"""
-    # Get potencial
+    """Eliminar un potencial"""
     stmt = select(Potencial).where(Potencial.id == potencial_id)
     result = await db.execute(stmt)
     potencial = result.scalar_one_or_none()
 
     if not potencial:
-        raise HTTPException(status_code=404, detail="Potencial not found")
+        raise HTTPException(status_code=404, detail="Potencial no encontrado")
 
-    # Update estado to QUOTE_ACCEPTED
-    potencial.estado = "QUOTE_ACCEPTED"
-    potencial.updated_at = datetime.now(timezone.utc)
-
+    await db.delete(potencial)
     await db.commit()
-    await db.refresh(potencial)
 
-    return {
-        "status": "ok",
-        "message": "Potencial converted to QUOTE_ACCEPTED. Produccion order will be created on next sync.",
-        "potencial_id": potencial_id
-    }
+    return {"status": "ok", "message": f"Potencial {potencial_id} eliminado"}

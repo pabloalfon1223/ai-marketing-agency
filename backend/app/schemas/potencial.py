@@ -1,45 +1,52 @@
+"""
+Esquemas Pydantic para validación de datos de POTENCIALES
+"""
+
 from pydantic import BaseModel, Field
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 
 class PotencialBase(BaseModel):
-    nombre: str
-    mueble: str
-    fecha_contacto: datetime
-    estado: str = "SIN_RESPUESTA"
+    """Datos base del potencial"""
+    nombre: str = Field(..., min_length=1, max_length=200)
+    mueble: str = Field(..., min_length=1, max_length=100)
+    celular: Optional[str] = None
     quien_lo_tiene: Optional[str] = None
-    telefono: Optional[str] = None
-    nota: Optional[str] = None
+    prioridad: str = Field(default="MEDIA")  # ALTA, MEDIA, BAJA
+    estado: Optional[str] = Field(default="SIN_RESPUESTA")
     fecha_seguimiento: Optional[datetime] = None
-    valor_estimado: Optional[float] = None
 
 
 class PotencialCreate(PotencialBase):
-    """Schema para crear un nuevo potencial"""
-    pass
+    """Esquema para crear un nuevo potencial"""
+    fecha: datetime = Field(default_factory=datetime.utcnow)
 
 
 class PotencialUpdate(BaseModel):
-    """Schema para actualizar un potencial"""
+    """Esquema para actualizar un potencial existente"""
     nombre: Optional[str] = None
     mueble: Optional[str] = None
-    fecha_contacto: Optional[datetime] = None
-    estado: Optional[str] = None
+    celular: Optional[str] = None
     quien_lo_tiene: Optional[str] = None
-    telefono: Optional[str] = None
-    nota: Optional[str] = None
+    prioridad: Optional[str] = None
+    estado: Optional[str] = None
+    fecha: Optional[datetime] = None
     fecha_seguimiento: Optional[datetime] = None
-    valor_estimado: Optional[float] = None
 
 
 class PotencialResponse(PotencialBase):
-    """Schema para respuestas de potencial"""
+    """Esquema de respuesta de potencial"""
     id: int
-    orden_id_asignada: Optional[str] = None
-    sincronizado_sheets: bool = False
+    fecha: datetime
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class PotencialListResponse(BaseModel):
+    """Respuesta para listado de potenciales"""
+    total: int
+    items: list[PotencialResponse]

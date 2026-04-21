@@ -1,43 +1,44 @@
-from pydantic import BaseModel
-from datetime import datetime
+"""
+Esquemas Pydantic para validación de datos de PRODUCCION
+"""
+
+from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 
 
 class ProduccionBase(BaseModel):
-    orden_id: str
-    cliente: str
-    mueble: str
-    estado: str = "ACCEPTED"
-    fecha_inicio: datetime
-    fecha_entrega_est: Optional[datetime] = None
-    productor: Optional[str] = None
-    costo_real: Optional[float] = None
-    precio_final: Optional[float] = None
-    notas: Optional[str] = None
-    potencial_id: Optional[int] = None
+    """Datos base de producción"""
+    cliente: str = Field(..., min_length=1, max_length=200)
+    celular: Optional[str] = None
+    descripcion_breve: Optional[str] = None
+    estado: str = Field(default="PLANIFICACIÓN")
 
 
 class ProduccionCreate(ProduccionBase):
-    """Schema para crear una nueva orden de producción"""
+    """Esquema para crear un nuevo registro de producción"""
     pass
 
 
 class ProduccionUpdate(BaseModel):
-    """Schema para actualizar una orden de producción"""
+    """Esquema para actualizar un registro de producción"""
+    cliente: Optional[str] = None
+    celular: Optional[str] = None
+    descripcion_breve: Optional[str] = None
     estado: Optional[str] = None
-    fecha_entrega_est: Optional[datetime] = None
-    productor: Optional[str] = None
-    costo_real: Optional[float] = None
-    precio_final: Optional[float] = None
-    notas: Optional[str] = None
 
 
 class ProduccionResponse(ProduccionBase):
-    """Schema para respuestas de producción"""
+    """Esquema de respuesta de producción"""
     id: int
-    sincronizado_sheets: bool = False
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class ProduccionListResponse(BaseModel):
+    """Respuesta para listado de producciones"""
+    total: int
+    items: list[ProduccionResponse]

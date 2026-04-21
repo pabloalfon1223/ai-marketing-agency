@@ -1,59 +1,78 @@
-import api from './client';
+export interface PotencialesResumen {
+  total: number;
+  SIN_RESPUESTA: number;
+  ESPERAMOS_RESPUESTA: number;
+  COTIZACION_ENVIADA: number;
+  CLIENTE: number;
+  CERRAR: number;
+  RECONTACTAR: number;
+}
 
 export interface FunnelData {
-  [status: string]: number;
+  SIN_RESPUESTA: number;
+  ESPERAMOS_RESPUESTA: number;
+  COTIZACION_ENVIADA: number;
+  CLIENTE: number;
 }
 
-export interface ValueByStatus {
-  [status: string]: number;
-}
-
-export interface ConversionRateData {
+export interface ProduccionResumen {
   total: number;
-  quote_accepted: number;
-  conversion_rate: number;
+  PLANIFICACIÓN: number;
+  CARPINTERIA: number;
+  LAQUEADO: number;
+  'RETIRO PARA REMODELAR': number;
+  PENDIENTE: number;
+  'POST VENTA': number;
+  FIDELIZACION: number;
+  FINALIZADO: number;
+  finalizados: number;
+  alertas_sin_actualizar: number;
 }
 
-export interface TimelineItem {
-  orden_id: string;
-  cliente: string;
-  mueble: string;
-  estado: string;
-  fecha_inicio: string;
-  fecha_entrega_est?: string;
-  dias_produccion?: number;
-}
-
-export interface IngresosData {
-  total_ingresos: number;
-  currency: string;
-}
-
-export interface DashboardSummary {
-  total_potenciales: number;
-  total_produccion: number;
-  conversion_rate: number;
-  total_estimated_value: number;
-  total_ingresos: number;
-  currency: string;
+export interface PrioridadDistribucion {
+  ALTA: number;
+  MEDIA: number;
+  BAJA: number;
 }
 
 export const dashboardsAPI = {
-  funnelPotenciales: () =>
-    api.get<FunnelData>('/dashboards/potenciales/funnel').then(r => r.data),
+  // Potenciales endpoints
+  potencialesResumen: async (): Promise<PotencialesResumen> => {
+    const res = await fetch('/api/v1/dashboards/potenciales/resumen');
+    return res.json();
+  },
 
-  valueByStatus: () =>
-    api.get<ValueByStatus>('/dashboards/potenciales/value-by-status').then(r => r.data),
+  funnelPotenciales: async (): Promise<FunnelData> => {
+    const res = await fetch('/api/v1/dashboards/potenciales/funnel');
+    return res.json();
+  },
 
-  conversionRate: () =>
-    api.get<ConversionRateData>('/dashboards/potenciales/conversion-rate').then(r => r.data),
+  conversionRate: async () => {
+    const res = await fetch('/api/v1/dashboards/potenciales/conversion-rate');
+    return res.json();
+  },
 
-  timelineProduccion: () =>
-    api.get<TimelineItem[]>('/dashboards/produccion/timeline').then(r => r.data),
+  prioridadDistribucion: async (): Promise<PrioridadDistribucion> => {
+    const res = await fetch('/api/v1/dashboards/potenciales/por-prioridad');
+    return res.json();
+  },
 
-  ingresosTotal: () =>
-    api.get<IngresosData>('/dashboards/produccion/ingresos').then(r => r.data),
+  // Producción endpoints
+  produccionResumen: async (): Promise<ProduccionResumen> => {
+    const res = await fetch('/api/v1/dashboards/produccion/resumen');
+    return res.json();
+  },
 
-  summary: () =>
-    api.get<DashboardSummary>('/dashboards/summary').then(r => r.data),
+  produccionAlertas: async (dias?: number) => {
+    const params = new URLSearchParams();
+    if (dias) params.append('dias', dias.toString());
+    const res = await fetch(`/api/v1/dashboards/produccion/alertas?${params}`);
+    return res.json();
+  },
+
+  // General summary
+  resumenGeneral: async () => {
+    const res = await fetch('/api/v1/dashboards/resumen-general');
+    return res.json();
+  },
 };
