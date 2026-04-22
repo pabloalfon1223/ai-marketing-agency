@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ai-marketing-agency-backend
+    runtime: python311
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://ai-marketing-agency-ruby.vercel.app,http://localhost:5173
+      - key: GOOGLE_SHEETS_ID
+        sync: false
+      - key: GOOGLE_CREDENTIALS_JSON
+        sync: false
+      - key: GMAIL_ENABLED
+        value: "false"
