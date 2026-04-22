@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import create_tables
-from app.api import clients, projects, campaigns, content, agents, analytics, websocket, purchases, orders, ideas, checkout, potenciales, produccion, dashboards
+from app.api import clients, projects, campaigns, content, agents, analytics, websocket, purchases, orders, ideas, checkout
 import asyncio
 import logging
 
@@ -120,6 +120,7 @@ app.include_router(websocket.router, tags=["websocket"])
 
 # Polt Mobilier routers (con manejo de errores)
 try:
+    from app.api import potenciales, produccion, dashboards
     app.include_router(potenciales.router)
     app.include_router(produccion.router)
     app.include_router(dashboards.router)
