@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polt Mobilier - Dashboard Live</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .card-dark { background: #1e293b; border: 1px solid #334155; }
+        .header-dark { background: #0f172a; border-bottom: 2px solid #3b82f6; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .estado-alta { background: #991b1b; color: #fecaca; }
+        .estado-naranja { background: #92400e; color: #fde047; }
+        .estado-verde { background: #15803d; color: #86efac; }
+        .estado-azul { background: #0c4a6e; color: #7dd3fc; }
+        .estado-purple { background: #6b21a8; color: #d8b4fe; }
+        .alerta-rojo { background: #7f1d1d; border-left: 4px solid #ef4444; }
+        .alerta-naranja { background: #78350f; border-left: 4px solid #f97316; }
+        .table-dark { background: #1e293b; }
+        .table-dark tbody tr { border-color: #334155; }
+        .table-dark tbody tr:hover { background: #334155; }
+        .tabla-header { background: #0f172a; font-weight: bold; color: #60a5fa; }
+        input, select { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 0.5rem; border-radius: 0.375rem; }
+        input::placeholder { color: #94a3b8; }
+        .loading { text-align: center; color: #60a5fa; padding: 2rem; }
+        .error { color: #fecaca; padding: 1rem; background: #7f1d1d; border-radius: 0.375rem; margin: 1rem 0; }
+        .success { color: #86efac; padding: 1rem; background: #15803d; border-radius: 0.375rem; margin: 1rem 0; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; }
+        .spinner { display: inline-block; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header-dark sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex gap-8 items-center justify-between">
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-bold text-blue-400">Polt Mobilier 🏗️</h1>
+                <span id="statusSync" class="text-xs text-green-400">✅ Conectado</span>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="mostrarSeccion('potenciales')" class="px-4 py-2 rounded font-semibold hover:bg-blue-500 transition">📊 Potenciales</button>
+                <button onclick="mostrarSeccion('produccion')" class="px-4 py-2 rounded font-semibold hover:bg-blue-500 transition">📋 Producción</button>
+                <button onclick="mostrarSeccion('dashboards')" class="px-4 py-2 rounded font-semibold hover:bg-blue-500 transition">📈 Dashboards</button>
+            </div>
+            <div class="text-sm text-slate-400">
+                <select id="apiSelector" class="px-3 py-2" onchange="cambiarAPI()">
+                    <option value="local">localhost:8000</option>
+                    <option value="render">Render Deploy</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- POTENCIALES -->
+    <div id="potenciales" class="seccion">
+        <div class="max-w-full mx-auto p-6">
+            <h2 class="text-3xl font-bold mb-6 text-blue-400">📊 Potenciales (Oportunidades de Venta)</h2>
+
+            <div class="mb-6 flex gap-4">
+                <input type="text" id="searchPotencial" placeholder="🔍 Buscar por nombre o celular..." class="px-4 py-2 rounded flex-1">
+                <select id="filterEstado" class="px-4 py-2 rounded">
+                    <option value="">📌 Todos los estados</option>
+                    <option value="SIN_RESPUESTA">SIN_RESPUESTA</option>
+                    <option value="ESPERAMOS_RESPUESTA">ESPERAMOS_RESPUESTA</option>
+                    <option value="COTIZACION_ENVIADA">COTIZACION_ENVIADA</option>
+                    <option value="CLIENTE">CLIENTE</option>
+                </select>
+                <select id="filterPrioridad" class="px-4 py-2 rounded">
+                    <option value="">📍 Todas las prioridades</option>
+                    <option value="ALTA">ALTA</option>
+                    <option value="MEDIA">MEDIA</option>
+                    <option value="BAJA">BAJA</option>
+                </select>
+                <button onclick="cargarPotenciales()" class="px-6 py-2 bg-cyan-600 text-white rounded font-semibold hover:bg-cyan-700">🔄 Recargar</button>
+            </div>
+
+            <div id="potencialesCargando" class="loading">⏳ Cargando potenciales...</div>
+            <div id="potencialesError" class="hidden"></div>
+            <div class="overflow-x-auto rounded-lg" id="potencialesContainer" style="display:none;">
+                <table class="w-full table-dark">
+                    <thead class="tabla-header">
+                        <tr class="text-sm">
+                            <th class="px-4 py-3 text-left">NOMBRE</th>
+                            <th class="px-4 py-3 text-left">MUEBLE</th>
+                            <th class="px-4 py-3 text-left">FECHA</th>
+                            <th class="px-4 py-3 text-left">ESTADO</th>
+                            <th class="px-4 py-3 text-left">PRIORIDAD</th>
+                            <th class="px-4 py-3 text-left">QUIEN_LO_TIENE</th>
+                            <th class="px-4 py-3 text-left">CELULAR</th>
+                            <th class="px-4 py-3 text-left">FECHA_PROXIMO_PASO ⭐</th>
+                        </tr>
+                    </thead>
+                    <tbody id="potencialesBody" class="divide-y divide-gray-700">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCCION -->
+    <div id="produccion" class="seccion hidden">
+        <div class="max-w-full mx-auto p-6">
+            <h2 class="text-3xl font-bold mb-6 text-blue-400">📋 Producción (Órdenes en Proceso)</h2>
+
+            <div class="mb-6 flex gap-4">
+                <input type="text" id="searchProduccion" placeholder="🔍 Buscar por cliente o celular..." class="px-4 py-2 rounded flex-1">
+                <select id="filterProduccionEstado" class="px-4 py-2 rounded">
+                    <option value="">📌 Todos los estados</option>
+                    <option value="PLANIFICACION">PLANIFICACION</option>
+                    <option value="CARPINTERIA">CARPINTERIA</option>
+                    <option value="LAQUEADO">LAQUEADO</option>
+                    <option value="RETIRO_PARA_REMODELAR">RETIRO PARA REMODELAR</option>
+                    <option value="PENDIENTE">PENDIENTE</option>
+                    <option value="POST_VENTA">POST VENTA</option>
+                    <option value="FIDELIZACION">FIDELIZACION</option>
+                    <option value="FINALIZADO">FINALIZADO</option>
+                </select>
+                <button onclick="cargarProduccion()" class="px-6 py-2 bg-cyan-600 text-white rounded font-semibold hover:bg-cyan-700">🔄 Recargar</button>
+            </div>
+
+            <div id="produccionCargando" class="loading">⏳ Cargando producción...</div>
+            <div id="produccionError" class="hidden"></div>
+            <div id="produccionContainer" style="display:none;">
+                <div id="produccionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARDS -->
+    <div id="dashboards" class="seccion hidden">
+        <div class="max-w-full mx-auto p-6">
+            <h2 class="text-3xl font-bold mb-6 text-blue-400">📈 Dashboards (KPIs y Gráficos)</h2>
+
+            <button onclick="cargarDashboards()" class="mb-6 px-6 py-2 bg-cyan-600 text-white rounded font-semibold hover:bg-cyan-700">🔄 Recargar</button>
+
+            <div id="dashboardsCargando" class="loading">⏳ Cargando dashboards...</div>
+            <div id="dashboardsError" class="hidden"></div>
+
+            <!-- KPIs POTENCIALES -->
+            <div id="dashboardsContainer" style="display:none;">
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-cyan-400 mb-4">📊 Resumen Potenciales</h3>
+                    <div id="kpisPotenciales" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    </div>
+                </div>
+
+                <!-- KPIs PRODUCCION -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-cyan-400 mb-4">📋 Resumen Producción</h3>
+                    <div id="kpisProduccion" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    </div>
+                </div>
+
+                <!-- CHARTS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card-dark p-6 rounded-lg">
+                        <h4 class="text-lg font-bold text-yellow-400 mb-4">Potenciales por Estado</h4>
+                        <canvas id="chartPotenciales"></canvas>
+                    </div>
+                    <div class="card-dark p-6 rounded-lg">
+                        <h4 class="text-lg font-bold text-purple-400 mb-4">Producción por Estado</h4>
+                        <canvas id="chartProduccion"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN
+        const API_ENDPOINTS = {
+            local: 'http://localhost:8000',
+            render: 'https://ai-marketing-agency-backend.onrender.com'
+        };
+
+        let currentAPI = 'local';
+        let potencialesData = [];
+        let produccionData = [];
+
+        // FUNCIONES DE UTILIDAD
+        function getAPIUrl() {
+            return API_ENDPOINTS[currentAPI];
+        }
+
+        function cambiarAPI() {
+            currentAPI = document.getElementById('apiSelector').value;
+            console.log('Cambiado a API:', currentAPI);
+            location.reload();
+        }
+
+        function mostrarSeccion(seccion) {
+            document.querySelectorAll('.seccion').forEach(s => s.classList.add('hidden'));
+            document.getElementById(seccion).classList.remove('hidden');
+
+            if (seccion === 'potenciales') cargarPotenciales();
+            else if (seccion === 'produccion') cargarProduccion();
+            else if (seccion === 'dashboards') cargarDashboards();
+        }
+
+        function formatearFecha(fecha) {
+            if (!fecha) return '-';
+            const d = new Date(fecha);
+            return d.toLocaleDateString('es-AR');
+        }
+
+        function estadoBadge(estado) {
+            const estilos = {
+                'SIN_RESPUESTA': 'bg-gray-700 text-gray-300',
+                'ESPERAMOS_RESPUESTA': 'bg-yellow-900 text-yellow-300',
+                'COTIZACION_ENVIADA': 'bg-blue-900 text-blue-300',
+                'CLIENTE': 'bg-green-900 text-green-300',
+                'CERRAR': 'bg-red-900 text-red-300',
+                'RECONTACTAR': 'bg-red-900 text-red-300'
+            };
+            return `<span class="badge ${estilos[estado] || 'bg-slate-700 text-slate-300'}">${estado}</span>`;
+        }
+
+        function prioridadBadge(prioridad) {
+            const estilos = {
+                'ALTA': 'bg-red-900 text-red-300',
+                'MEDIA': 'bg-yellow-900 text-yellow-300',
+                'BAJA': 'bg-gray-700 text-gray-300'
+            };
+            return `<span class="badge ${estilos[prioridad] || 'bg-slate-700 text-slate-300'}">${prioridad}</span>`;
+        }
+
+        // CARGAR POTENCIALES
+        async function cargarPotenciales() {
+            try {
+                document.getElementById('potencialesCargando').style.display = 'block';
+                document.getElementById('potencialesContainer').style.display = 'none';
+                document.getElementById('potencialesError').classList.add('hidden');
+
+                const response = await fetch(`${getAPIUrl()}/api/v1/potenciales`);
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+                potencialesData = await response.json();
+                console.log('Potenciales cargados:', potencialesData);
+
+                renderizarPotenciales(potencialesData);
+                document.getElementById('potencialesCargando').style.display = 'none';
+                document.getElementById('potencialesContainer').style.display = 'block';
+            } catch (error) {
+                console.error('Error cargando potenciales:', error);
+                document.getElementById('potencialesCargando').style.display = 'none';
+                document.getElementById('potencialesError').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                document.getElementById('potencialesError').classList.remove('hidden');
+            }
+        }
+
+        function renderizarPotenciales(datos) {
+            const tbody = document.getElementById('potencialesBody');
+            const search = document.getElementById('searchPotencial').value.toLowerCase();
+            const estadoFilter = document.getElementById('filterEstado').value;
+            const prioridadFilter = document.getElementById('filterPrioridad').value;
+
+            let filtrados = datos.filter(p => {
+                const matchSearch = !search || p.nombre.toLowerCase().includes(search) || p.celular.includes(search);
+                const matchEstado = !estadoFilter || p.estado === estadoFilter;
+                const matchPrioridad = !prioridadFilter || p.prioridad === prioridadFilter;
+                return matchSearch && matchEstado && matchPrioridad;
+            });
+
+            tbody.innerHTML = filtrados.map(p => `
+                <tr>
+                    <td class="px-4 py-3 font-semibold">${p.nombre}</td>
+                    <td class="px-4 py-3">${p.mueble || '-'}</td>
+                    <td class="px-4 py-3">${formatearFecha(p.fecha)}</td>
+                    <td class="px-4 py-3">${estadoBadge(p.estado)}</td>
+                    <td class="px-4 py-3">${prioridadBadge(p.prioridad || 'MEDIA')}</td>
+                    <td class="px-4 py-3">${p.quien_lo_tiene || '-'}</td>
+                    <td class="px-4 py-3">${p.celular || '-'}</td>
+                    <td class="px-4 py-3 font-semibold text-yellow-300">${formatearFecha(p.fecha_proximo_paso)}</td>
+                </tr>
+            `).join('');
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-slate-400">No hay potenciales que coincidan</td></tr>';
+            }
+        }
+
+        // CARGAR PRODUCCION
+        async function cargarProduccion() {
+            try {
+                document.getElementById('produccionCargando').style.display = 'block';
+                document.getElementById('produccionContainer').style.display = 'none';
+                document.getElementById('produccionError').classList.add('hidden');
+
+                const response = await fetch(`${getAPIUrl()}/api/v1/produccion`);
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+                produccionData = await response.json();
+                console.log('Producción cargada:', produccionData);
+
+                renderizarProduccion(produccionData);
+                document.getElementById('produccionCargando').style.display = 'none';
+                document.getElementById('produccionContainer').style.display = 'block';
+            } catch (error) {
+                console.error('Error cargando producción:', error);
+                document.getElementById('produccionCargando').style.display = 'none';
+                document.getElementById('produccionError').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                document.getElementById('produccionError').classList.remove('hidden');
+            }
+        }
+
+        function renderizarProduccion(datos) {
+            const container = document.getElementById('produccionCards');
+            const search = document.getElementById('searchProduccion').value.toLowerCase();
+            const estadoFilter = document.getElementById('filterProduccionEstado').value;
+
+            let filtrados = datos.filter(p => {
+                const matchSearch = !search || p.cliente.toLowerCase().includes(search) || (p.celular && p.celular.includes(search));
+                const matchEstado = !estadoFilter || p.estado === estadoFilter;
+                return matchSearch && matchEstado;
+            });
+
+            const colorEstados = {
+                'PLANIFICACION': '#3b82f6',
+                'CARPINTERIA': '#06b6d4',
+                'LAQUEADO': '#8b5cf6',
+                'RETIRO_PARA_REMODELAR': '#f59e0b',
+                'PENDIENTE': '#ef4444',
+                'POST_VENTA': '#ec4899',
+                'FIDELIZACION': '#6366f1',
+                'FINALIZADO': '#10b981'
+            };
+
+            container.innerHTML = filtrados.map(p => {
+                const diasDesdeActualizacion = Math.floor((new Date() - new Date(p.updated_at)) / (1000 * 60 * 60 * 24));
+                const alertaClase = diasDesdeActualizacion > 5 ? 'alerta-rojo' : (diasDesdeActualizacion > 3 ? 'alerta-naranja' : '');
+
+                return `
+                    <div class="card-dark p-4 rounded-lg ${alertaClase}">
+                        <h4 class="text-lg font-bold text-cyan-300">${p.cliente}</h4>
+                        <p class="text-sm text-slate-400 mt-1">📱 ${p.celular || 'Sin teléfono'}</p>
+                        <p class="text-sm text-slate-400">📋 ${p.descripcion_breve || 'Sin descripción'}</p>
+                        <div style="border-left: 4px solid ${colorEstados[p.estado] || '#94a3b8'};" class="pl-3 mt-3 pt-3">
+                            <span class="text-xs font-bold text-gray-300">Estado:</span>
+                            <p class="font-semibold" style="color: ${colorEstados[p.estado] || '#94a3b8'}">${p.estado}</p>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3">↻ Actualizado hace ${diasDesdeActualizacion} días</p>
+                    </div>
+                `;
+            }).join('');
+
+            if (filtrados.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-slate-400 py-8">No hay órdenes que coincidan</div>';
+            }
+        }
+
+        // CARGAR DASHBOARDS
+        async function cargarDashboards() {
+            try {
+                document.getElementById('dashboardsCargando').style.display = 'block';
+                document.getElementById('dashboardsContainer').style.display = 'none';
+                document.getElementById('dashboardsError').classList.add('hidden');
+
+                // Cargar datos
+                await Promise.all([cargarPotenciales(), cargarProduccion()]);
+
+                renderizarDashboards();
+                document.getElementById('dashboardsCargando').style.display = 'none';
+                document.getElementById('dashboardsContainer').style.display = 'block';
+            } catch (error) {
+                console.error('Error cargando dashboards:', error);
+                document.getElementById('dashboardsCargando').style.display = 'none';
+                document.getElementById('dashboardsError').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                document.getElementById('dashboardsError').classList.remove('hidden');
+            }
+        }
+
+        function renderizarDashboards() {
+            // KPIs POTENCIALES
+            const totalPotenciales = potencialesData.length;
+            const clientesConvertidos = potencialesData.filter(p => p.estado === 'CLIENTE').length;
+            const tasaConversion = totalPotenciales > 0 ? ((clientesConvertidos / totalPotenciales) * 100).toFixed(1) : 0;
+            const esperandoRespuesta = potencialesData.filter(p => p.estado === 'ESPERAMOS_RESPUESTA').length;
+
+            const kpisPotenciales = [
+                { label: 'Total Potenciales', valor: totalPotenciales, color: '#60a5fa' },
+                { label: 'Esperando Respuesta', valor: esperandoRespuesta, color: '#fbbf24' },
+                { label: 'Clientes Convertidos', valor: clientesConvertidos, color: '#34d399' },
+                { label: 'Tasa Conversión', valor: `${tasaConversion}%`, color: '#f472b6' },
+                { label: 'Próximos Pasos Hoy', valor: potencialesData.filter(p => p.fecha_proximo_paso === new Date().toISOString().split('T')[0]).length, color: '#fcd34d' }
+            ];
+
+            document.getElementById('kpisPotenciales').innerHTML = kpisPotenciales.map(kpi => `
+                <div class="card-dark p-4 rounded-lg border-l-4" style="border-left-color: ${kpi.color}">
+                    <p class="text-xs text-slate-400">${kpi.label}</p>
+                    <p class="text-2xl font-bold mt-2" style="color: ${kpi.color}">${kpi.valor}</p>
+                </div>
+            `).join('');
+
+            // KPIs PRODUCCION
+            const totalOrdenes = produccionData.length;
+            const ordenesActivas = produccionData.filter(p => p.estado !== 'FINALIZADO').length;
+            const finalizadas = produccionData.filter(p => p.estado === 'FINALIZADO').length;
+            const alertas5dias = produccionData.filter(p => {
+                const dias = Math.floor((new Date() - new Date(p.updated_at)) / (1000 * 60 * 60 * 24));
+                return dias > 5;
+            }).length;
+
+            const kpisProduccion = [
+                { label: 'Órdenes Activas', valor: ordenesActivas, color: '#60a5fa' },
+                { label: 'Finalizadas', valor: finalizadas, color: '#34d399' },
+                { label: 'Alertas >5 días', valor: alertas5dias, color: '#f87171' },
+                { label: 'En Carpintería', valor: produccionData.filter(p => p.estado === 'CARPINTERIA').length, color: '#a78bfa' },
+                { label: 'Total Órdenes', valor: totalOrdenes, color: '#fbbf24' }
+            ];
+
+            document.getElementById('kpisProduccion').innerHTML = kpisProduccion.map(kpi => `
+                <div class="card-dark p-4 rounded-lg border-l-4" style="border-left-color: ${kpi.color}">
+                    <p class="text-xs text-slate-400">${kpi.label}</p>
+                    <p class="text-2xl font-bold mt-2" style="color: ${kpi.color}">${kpi.valor}</p>
+                </div>
+            `).join('');
+
+            // GRÁFICOS
+            const estadosPotenciales = {};
+            potencialesData.forEach(p => {
+                estadosPotenciales[p.estado] = (estadosPotenciales[p.estado] || 0) + 1;
+            });
+
+            const estadosProduccion = {};
+            produccionData.forEach(p => {
+                estadosProduccion[p.estado] = (estadosProduccion[p.estado] || 0) + 1;
+            });
+
+            // Gráfico Potenciales
+            const ctxPotenciales = document.getElementById('chartPotenciales').getContext('2d');
+            new Chart(ctxPotenciales, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(estadosPotenciales),
+                    datasets: [{
+                        data: Object.values(estadosPotenciales),
+                        backgroundColor: ['#9ca3af', '#fbbf24', '#60a5fa', '#34d399', '#f87171'],
+                        borderColor: '#1e293b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#e2e8f0' } } }
+                }
+            });
+
+            // Gráfico Producción
+            const ctxProduccion = document.getElementById('chartProduccion').getContext('2d');
+            new Chart(ctxProduccion, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(estadosProduccion),
+                    datasets: [{
+                        label: 'Órdenes',
+                        data: Object.values(estadosProduccion),
+                        backgroundColor: '#60a5fa',
+                        borderColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { ticks: { color: '#e2e8f0' }, grid: { color: '#334155' } },
+                        x: { ticks: { color: '#e2e8f0' }, grid: { color: '#334155' } }
+                    },
+                    plugins: { legend: { labels: { color: '#e2e8f0' } } }
+                }
+            });
+        }
+
+        // Filtros
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchPotencial').addEventListener('input', () => renderizarPotenciales(potencialesData));
+            document.getElementById('filterEstado').addEventListener('change', () => renderizarPotenciales(potencialesData));
+            document.getElementById('filterPrioridad').addEventListener('change', () => renderizarPotenciales(potencialesData));
+
+            document.getElementById('searchProduccion').addEventListener('input', () => renderizarProduccion(produccionData));
+            document.getElementById('filterProduccionEstado').addEventListener('change', () => renderizarProduccion(produccionData));
+
+            // Auto-refresh cada 10 minutos
+            setInterval(() => {
+                const seccionActiva = document.querySelector('.seccion:not(.hidden)');
+                if (seccionActiva.id === 'potenciales') cargarPotenciales();
+                else if (seccionActiva.id === 'produccion') cargarProduccion();
+                else if (seccionActiva.id === 'dashboards') cargarDashboards();
+            }, 600000); // 10 min
+
+            // Cargar potenciales por defecto
+            cargarPotenciales();
+        });
+    </script>
+</body>
+</html>
