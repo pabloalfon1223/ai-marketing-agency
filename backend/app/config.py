@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     gmail_recipient_email: str = ""
     gmail_enabled: bool = False
 
+    # Discord Bot Configuration
+    discord_bot_token: str = ""
+    discord_server_id: str = ""
+    discord_cerebro_channel: str = "0"
+    discord_mente_pausada_channel: str = "0"
+    discord_polt_mobilier_channel: str = "0"
+    discord_sistema_jefe_channel: str = "0"
+    discord_pruebas_channel: str = "0"
+    discord_enabled: bool = False
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

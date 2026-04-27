@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import create_tables
-from app.api import clients, projects, campaigns, content, agents, analytics, websocket, purchases, orders, ideas, checkout
+from app.api import clients, projects, campaigns, content, agents, analytics, websocket, purchases, orders, ideas, checkout, discord as discord_api
 import asyncio
 import logging
 
@@ -31,6 +31,17 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Task queue initialized")
     except Exception as e:
         logger.warning(f"⚠️ Error initializing task queue: {str(e)}")
+
+    # Discord Bot
+    try:
+        if os.getenv("DISCORD_BOT_TOKEN"):
+            from app.services.discord_bot import start_bot_background
+            start_bot_background()
+            logger.info("✅ Discord bot iniciado en background")
+        else:
+            logger.info("ℹ️  Discord bot desactivado (DISCORD_BOT_TOKEN no configurado)")
+    except Exception as e:
+        logger.warning(f"⚠️ Error iniciando Discord bot: {str(e)}")
 
     try:
         # Initialize APScheduler for Sheets sync (every 10 minutes)
@@ -117,6 +128,7 @@ app.include_router(orders.router, prefix="/api/v1", tags=["orders"])
 app.include_router(ideas.router, prefix="/api/v1", tags=["ideas"])
 app.include_router(checkout.router, prefix="/api/v1", tags=["checkout"])
 app.include_router(websocket.router, tags=["websocket"])
+app.include_router(discord_api.router)
 
 # Polt Mobilier routers (con manejo de errores)
 try:
