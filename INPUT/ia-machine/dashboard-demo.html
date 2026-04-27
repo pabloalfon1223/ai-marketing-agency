@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA Machine — Control Center</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { background: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #ffffff15; border-radius: 4px; }
+  .sidebar-item:hover { background: rgba(255,255,255,0.05); }
+  .sidebar-item.active { background: rgba(124,58,237,0.15); border-left: 2px solid #7c3aed; }
+  .card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; }
+  .card:hover { background: rgba(255,255,255,0.04); }
+  .badge-mp { background: rgba(124,58,237,0.2); color: #a78bfa; }
+  .badge-polt { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .badge-cerebro { background: rgba(6,182,212,0.2); color: #67e8f9; }
+  .badge-global { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+  .status-idle { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+  .status-running { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .status-active { background: rgba(16,185,129,0.15); color: #34d399; }
+  .status-error { background: rgba(239,68,68,0.15); color: #f87171; }
+  .btn-primary { background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-ghost { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.09); color: white; }
+  .tab-active { background: #7c3aed; color: white; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .spin { animation: spin 1.5s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50; display:flex; align-items:center; justify-content:center; }
+  .modal { background:#13131f; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:560px; max-width:95vw; }
+  input, select, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: #7c3aed; }
+  input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
+  select option { background: #1a1a2e; }
+  .log-line { font-family: 'Courier New', monospace; font-size: 11px; color: rgba(255,255,255,0.4); padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .log-line:last-child { border: none; }
+  .blocker-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.15); border-radius:8px; margin-bottom:6px; }
+  .task-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border-radius:8px; margin-bottom:4px; cursor:pointer; }
+  .task-item:hover { background:rgba(255,255,255,0.06); }
+  .notification { position:fixed; bottom:24px; right:24px; background:#1a1a2e; border:1px solid rgba(124,58,237,0.4); border-radius:10px; padding:12px 16px; color:white; font-size:13px; z-index:100; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+</style>
+</head>
+<body class="text-white min-h-screen">
+
+<!-- SIDEBAR -->
+<div class="fixed left-0 top-0 h-full w-56 border-r border-white/[0.06] flex flex-col" style="background:#0d0d17;">
+  <div class="p-5 border-b border-white/[0.06]">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">IA</div>
+      <div>
+        <p class="text-sm font-bold text-white leading-tight">IA Machine</p>
+        <p class="text-[10px] text-white/30">Control Center</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="flex-1 p-3 space-y-0.5">
+    <div onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" class="text-violet-400"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="text-sm text-white">Dashboard</span>
+    </div>
+    <div onclick="showSection('agents')" id="nav-agents" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" class="text-white/40"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0112 0v1"/><circle cx="18" cy="17" r="3" fill="currentColor" stroke="none" class="text-emerald-400"/></svg>
+      <span class="text-sm text-white/60">Agentes</span>
+      <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-violet-600/30 text-violet-300">8</span>
+    </div>
+    <div onclick="showSection('projects')" id="nav-projects" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" class="text-white/40"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+      <span class="text-sm text-white/60">Proyectos</span>
+    </div>
+    <div onclick="showSection('inbox')" id="nav-inbox" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" class="text-white/40"><path d="M4 4h16v12H4z"/><path d="M4 8l8 5 8-5"/></svg>
+      <span class="text-sm text-white/60">Inbox</span>
+      <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-amber-600/30 text-amber-300">5</span>
+    </div>
+    <div onclick="showSection('skills')" id="nav-skills" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" class="text-white/40"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="text-sm text-white/60">Skills</span>
+    </div>
+  </nav>
+
+  <div class="p-3 border-t border-white/[0.06]">
+    <div class="flex items-center gap-2.5 px-3 py-2">
+      <div class="w-7 h-7 rounded-full bg-violet-600/30 flex items-center justify-center text-violet-300 text-xs font-bold">L</div>
+      <div>
+        <p class="text-xs font-medium text-white">Lucas</p>
+        <p class="text-[10px] text-white/30">lucasjolivera3@gmail.com</p>
+      </div>
+    </div>
+    <div class="mt-2 mx-3 flex items-center gap-2 p-2 rounded-lg" style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15);">
+      <div class="w-1.5 h-1.5 rounded-full bg-red-400 pulse"></div>
+      <span class="text-[10px] text-red-400">Hotmart pendiente</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="ml-56 min-h-screen">
+  <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-3.5 border-b border-white/[0.06]" style="background:rgba(10,10,15,0.9); backdrop-filter:blur(12px);">
+    <div id="page-title" class="text-sm font-medium text-white">Dashboard General</div>
+    <div class="flex items-center gap-3">
+      <span id="current-time" class="text-xs text-white/30"></span>
+      <button onclick="openNewAgentModal()" class="btn-primary px-3 py-1.5 text-xs flex items-center gap-1.5">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Nuevo Agente
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="section-dashboard" class="fade-in">
+
+      <!-- Project Tabs -->
+      <div class="flex items-center gap-3 mb-6">
+        <div class="flex gap-1 p-1 rounded-xl border border-white/[0.07]" style="background:rgba(255,255,255,0.04);">
+          <button onclick="setProject('mp')" id="tab-mp" class="tab-active px-4 py-1.5 rounded-lg text-sm transition-all">Mente Pausada</button>
+          <button onclick="setProject('polt')" id="tab-polt" class="px-4 py-1.5 rounded-lg text-sm text-white/50 transition-all hover:text-white">Polt Mobilier</button>
+          <button onclick="setProject('cerebro')" id="tab-cerebro" class="px-4 py-1.5 rounded-lg text-sm text-white/50 transition-all hover:text-white">Cerebro</button>
+        </div>
+        <div id="project-status-badge" class="text-xs px-3 py-1.5 rounded-full badge-mp">80% completado — Prioridad 1</div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] text-white/40 uppercase tracking-wider">Revenue Hoy</span>
+            <svg width="13" height="13" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <p id="kpi-today" class="text-2xl font-bold text-white mb-1">$0</p>
+          <p class="text-[11px] text-white/30">0 ventas hoy</p>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] text-white/40 uppercase tracking-wider">Revenue Mes</span>
+            <svg width="13" height="13" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <p id="kpi-month" class="text-2xl font-bold text-white mb-1">$0</p>
+          <p class="text-[11px] text-white/30" id="kpi-month-sub">Meta: $3.000 USD</p>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] text-white/40 uppercase tracking-wider">Conversión</span>
+            <svg width="13" height="13" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <p id="kpi-conv" class="text-2xl font-bold text-white mb-1">0%</p>
+          <p class="text-[11px] text-white/30">últimos 7 días</p>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] text-white/40 uppercase tracking-wider">Pipeline</span>
+            <svg width="13" height="13" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <p id="kpi-leads" class="text-2xl font-bold text-white mb-1">4</p>
+          <p class="text-[11px] text-white/30" id="kpi-leads-sub">leads activos</p>
+        </div>
+      </div>
+
+      <!-- Chart + Meta -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+        <div class="card p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-medium text-white">Revenue últimos 7 días</h2>
+            <span id="chart-currency" class="text-xs text-white/30">USD</span>
+          </div>
+          <canvas id="revenueChart" height="140"></canvas>
+        </div>
+        <div class="card p-5 flex flex-col gap-4">
+          <div>
+            <h2 class="text-sm font-medium text-white mb-1">Meta del Mes</h2>
+            <p id="meta-label" class="text-xs text-white/40 mb-3">$0 de $3.000 USD</p>
+            <div class="progress-bar mb-2">
+              <div id="meta-bar" class="progress-fill bg-amber-500" style="width:0%"></div>
+            </div>
+            <p id="meta-pct" class="text-xs text-white/40">0% completado</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-white/30 uppercase tracking-wider mb-2">Blockers activos</p>
+            <div id="blockers-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agents mini + Pending tasks -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-medium text-white">Agentes del proyecto</h2>
+            <button onclick="showSection('agents')" class="text-xs text-violet-400 hover:text-violet-300">Ver todos →</button>
+          </div>
+          <div id="agents-mini" class="space-y-2"></div>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-medium text-white">Próximas tareas</h2>
+            <span class="text-[10px] text-white/30">Click para marcar</span>
+          </div>
+          <div id="tasks-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AGENTS ===== -->
+    <div id="section-agents" class="fade-in hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-lg font-bold text-white">Agentes IA</h1>
+          <p class="text-xs text-white/40 mt-0.5">8 agentes configurados — triggers deshabilitados</p>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2);">
+          <svg width="13" height="13" fill="#f59e0b" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13" stroke="white" stroke-width="2"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="white" stroke-width="2"/></svg>
+          <span class="text-xs text-amber-400">Hotmart sin configurar — bloquea ventas MP</span>
+        </div>
+      </div>
+
+      <div class="flex gap-1 p-1 rounded-xl border border-white/[0.07] w-fit mb-5" style="background:rgba(255,255,255,0.04);">
+        <button onclick="filterAgents('all')" id="af-all" class="tab-active px-3 py-1.5 rounded-lg text-xs transition-all">Todos</button>
+        <button onclick="filterAgents('mp')" id="af-mp" class="px-3 py-1.5 rounded-lg text-xs text-white/50 transition-all hover:text-white">Mente Pausada</button>
+        <button onclick="filterAgents('polt')" id="af-polt" class="px-3 py-1.5 rounded-lg text-xs text-white/50 transition-all hover:text-white">Polt Mobilier</button>
+        <button onclick="filterAgents('cerebro')" id="af-cerebro" class="px-3 py-1.5 rounded-lg text-xs text-white/50 transition-all hover:text-white">Cerebro</button>
+        <button onclick="filterAgents('global')" id="af-global" class="px-3 py-1.5 rounded-lg text-xs text-white/50 transition-all hover:text-white">Global</button>
+      </div>
+
+      <div id="agents-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </div>
+
+    <!-- ===== PROJECTS ===== -->
+    <div id="section-projects" class="fade-in hidden">
+      <h1 class="text-lg font-bold text-white mb-5">Estado de Proyectos</h1>
+      <div class="space-y-4" id="projects-list"></div>
+    </div>
+
+    <!-- ===== INBOX ===== -->
+    <div id="section-inbox" class="fade-in hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-lg font-bold text-white">Inbox</h1>
+          <p class="text-xs text-white/40 mt-0.5">Archivos para procesar y distribuir</p>
+        </div>
+        <button class="btn-ghost px-3 py-1.5 text-xs">Abrir carpeta ↗</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-violet-400"></div>
+            <h2 class="text-sm font-medium text-white">Mente Pausada</h2>
+            <span class="ml-auto text-xs text-white/30">0 archivos</span>
+          </div>
+          <div class="text-center py-8">
+            <p class="text-xs text-white/20">Inbox vacío</p>
+            <p class="text-[10px] text-white/15 mt-1">Arrastrá archivos aquí</p>
+          </div>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <h2 class="text-sm font-medium text-white">Polt Mobilier</h2>
+            <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-600/20 text-amber-300">5 archivos</span>
+          </div>
+          <div class="space-y-2">
+            <div class="task-item" onclick="processFile(this)">
+              <svg width="12" height="12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span class="text-xs text-white/60">Daniel Aprile Medidas 1.jpg</span>
+            </div>
+            <div class="task-item" onclick="processFile(this)">
+              <svg width="12" height="12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span class="text-xs text-white/60">Daniel Aprile Medidas 2.jpg</span>
+            </div>
+            <div class="task-item" onclick="processFile(this)">
+              <svg width="12" height="12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span class="text-xs text-white/60">Daniel Aprile.jpg</span>
+            </div>
+            <div class="task-item" onclick="processFile(this)">
+              <svg width="12" height="12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span class="text-xs text-white/60">Ernesto Mislej.jpg</span>
+            </div>
+            <div class="task-item" onclick="processFile(this)">
+              <svg width="12" height="12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span class="text-xs text-white/60">Daniel Aprile Medidas.jpg</span>
+            </div>
+            <button class="w-full mt-2 btn-primary py-2 text-xs">Distribuir todos →</button>
+          </div>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-cyan-400"></div>
+            <h2 class="text-sm font-medium text-white">Cerebro</h2>
+            <span class="ml-auto text-xs text-white/30">0 archivos</span>
+          </div>
+          <div class="text-center py-8">
+            <p class="text-xs text-white/20">Inbox vacío</p>
+            <p class="text-[10px] text-white/15 mt-1">Arrastrá archivos aquí</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SKILLS ===== -->
+    <div id="section-skills" class="fade-in hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-lg font-bold text-white">Skills</h1>
+          <p class="text-xs text-white/40 mt-0.5">44 skills activas en el sistema</p>
+        </div>
+        <input type="text" placeholder="Buscar skill..." class="px-3 py-1.5 text-xs w-48" oninput="filterSkills(this.value)">
+      </div>
+      <div id="skills-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NEW AGENT MODAL -->
+<div id="modal" class="modal-overlay hidden">
+  <div class="modal p-6 fade-in">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-bold text-white">Nuevo Agente</h2>
+      <button onclick="closeModal()" class="text-white/40 hover:text-white">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-white/40 mb-1 block">Nombre del agente</label>
+          <input type="text" placeholder="ej: Email Sequence Writer" class="w-full px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs text-white/40 mb-1 block">Proyecto</label>
+          <select class="w-full px-3 py-2 text-sm">
+            <option>Mente Pausada</option>
+            <option>Polt Mobilier</option>
+            <option>Cerebro</option>
+            <option>Global</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-white/40 mb-1 block">Descripción corta</label>
+        <input type="text" placeholder="Qué hace este agente en una línea" class="w-full px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-white/40 mb-1 block">Prompt / Instrucciones</label>
+        <textarea rows="4" placeholder="Describí en detalle qué debe hacer el agente, qué inputs necesita y qué output genera..." class="w-full px-3 py-2 text-sm resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-white/40 mb-1 block">Schedule</label>
+          <select class="w-full px-3 py-2 text-sm">
+            <option>Manual (sin trigger)</option>
+            <option>Diario 7:00 AM ARG</option>
+            <option>Diario 8:00 AM ARG</option>
+            <option>Diario 9:00 AM ARG</option>
+            <option>Diario 5:00 PM ARG</option>
+            <option>Lunes 9:00 AM ARG</option>
+            <option>Viernes 6:00 PM ARG</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-white/40 mb-1 block">Skill base (opcional)</label>
+          <select class="w-full px-3 py-2 text-sm">
+            <option value="">Ninguna</option>
+            <option>content-pipeline</option>
+            <option>copywriting</option>
+            <option>email-sequence</option>
+            <option>paid-ads</option>
+            <option>lead-scorer-polt</option>
+            <option>mp-scout</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="closeModal()" class="btn-ghost flex-1 py-2 text-sm">Cancelar</button>
+      <button onclick="createAgent()" class="btn-primary flex-1 py-2 text-sm">Crear Agente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const projects = {
+  mp: {
+    name: "Mente Pausada", label: "badge-mp", pct: 80, priority: 1,
+    kpi: { today: 0, month: 0, goal: 3000, conv: 0, leads: 0, currency: "USD" },
+    meta: "$0 de $3.000 USD",
+    blockers: ["Hotmart sin configurar — sin checkout no hay ventas", "ruidomentalcero.com sin deploy"],
+    tasks: ["Configurar Hotmart + checkout ($47 USD)", "Deploy ruidomentalcero.com", "Activar Content Director 7AM", "Primera campaña Meta Ads México"],
+    agents: ["content-director-mp", "mp-scout"],
+    chart: [0,0,0,0,0,0,0],
+    badge: "80% completado — Prioridad 1"
+  },
+  polt: {
+    name: "Polt Mobilier", label: "badge-polt", pct: 50, priority: 2,
+    kpi: { today: 0, month: 320000, goal: 2000000, conv: 30, leads: 4, currency: "ARS" },
+    meta: "$320k de $2M ARS",
+    blockers: ["WhatsApp bot Whapi.cloud sin configurar"],
+    tasks: ["Crear Google Sheet Polt Ops", "Instalar Whapi.cloud bot", "Completar Polt Calculator Pro", "Pipeline de leads activo"],
+    agents: ["polt-contenido", "polt-leads"],
+    chart: [80000, 0, 120000, 0, 0, 0, 320000],
+    badge: "50% completado — Prioridad 2"
+  },
+  cerebro: {
+    name: "Cerebro", label: "badge-cerebro", pct: 0, priority: 3,
+    kpi: { today: 0, month: 0, goal: 500, conv: 0, leads: 0, currency: "USD" },
+    meta: "$0 de $500 USD",
+    blockers: ["Market Scanner sin configurar", "Supadata MCP no conectado", "Apify scraping sin setup"],
+    tasks: ["Configurar Market Scanner", "Conectar Supadata MCP", "Primera análisis de oportunidades", "Setup Apify scraping"],
+    agents: ["cerebro-scanner"],
+    chart: [0,0,0,0,0,0,0],
+    badge: "0% completado — Prioridad 3"
+  }
+};
+
+const agents = [
+  { id:"content-director-mp", name:"Content Director MP", desc:"Genera piezas de contenido diario para Instagram/TikTok de Mente Pausada", project:"mp", status:"idle", lastRun:"2026-04-24 07:00", nextRun:"2026-04-25 07:00", runs:47, success:96, logs:["[07:02] 3 reels + 4 carruseles + 3 stories generados","[07:01] Leyendo Google Sheet...","[07:00] Iniciando generación diaria"] },
+  { id:"polt-contenido", name:"Polt Contenido Diario", desc:"Posts de Instagram y templates WhatsApp para Polt Mobilier", project:"polt", status:"idle", lastRun:"2026-04-24 09:00", nextRun:"2026-04-25 09:00", runs:31, success:94, logs:["[09:05] 2 posts + 3 templates WhatsApp generados","[09:00] Iniciando..."] },
+  { id:"cerebro-scanner", name:"Cerebro Market Scanner", desc:"Analiza tendencias y oportunidades de mercado cada lunes", project:"cerebro", status:"idle", lastRun:"2026-04-21 09:00", nextRun:"2026-04-28 09:00", runs:8, success:100, logs:["[09:15] 5 oportunidades rankeadas","[09:00] Iniciando escaneo semanal..."] },
+  { id:"daily-digest", name:"Daily Digest", desc:"Email matutino con top 3 acciones del día para los 3 proyectos", project:"global", status:"idle", lastRun:"2026-04-24 08:00", nextRun:"2026-04-25 08:00", runs:52, success:98, logs:["[08:01] Email enviado a lucasjolivera3@gmail.com","[08:00] Leyendo state.json..."] },
+  { id:"daily-analytics", name:"Daily Analytics", desc:"Reporte KPIs y tendencias de los 3 proyectos a las 5 PM", project:"global", status:"idle", lastRun:"2026-04-24 17:00", nextRun:"2026-04-25 17:00", runs:52, success:100, logs:["[17:03] Reporte generado y enviado","[17:00] Recopilando datos..."] },
+  { id:"mp-scout", name:"Scout Agent MP", desc:"Busca tendencias de contenido y competidores en bienestar/mindfulness", project:"mp", status:"idle", lastRun:"2026-04-22 10:00", nextRun:"Manual", runs:15, success:87, logs:["[10:20] 12 tendencias, 3 oportunidades top","[10:00] Iniciando búsqueda..."] },
+  { id:"polt-leads", name:"Polt Lead Scorer", desc:"Califica y prioriza leads entrantes de WhatsApp y formularios web", project:"polt", status:"idle", lastRun:"2026-04-23 14:30", nextRun:"Automático", runs:23, success:91, logs:["[14:32] 3 leads: 2 high, 1 medium","[14:30] Procesando cola..."] },
+  { id:"self-improver", name:"Self-Improver Loop", desc:"Revisa performance semanal de agentes y propone mejoras a prompts", project:"global", status:"idle", lastRun:"2026-04-18 18:00", nextRun:"2026-04-25 18:00", runs:3, success:100, logs:["[18:45] 2 mejoras aprobadas, 1 rechazada","[18:00] Analizando logs de la semana..."] },
+];
+
+const skills = [
+  { name:"content-pipeline", cat:"IA Machine", desc:"Pipeline semanal: ideas → copy → brief → caption" },
+  { name:"carrusel-designer", cat:"IA Machine", desc:"Carruseles IG/TikTok con brief visual y copy" },
+  { name:"mp-scout", cat:"IA Machine", desc:"Tendencias bienestar en mercado hispanohablante" },
+  { name:"mp-global-targeting", cat:"IA Machine", desc:"Estrategia targeting MX/CO/CL/ES/hispanos EEUU" },
+  { name:"lead-scorer-polt", cat:"IA Machine", desc:"Ranking de leads con próxima acción concreta" },
+  { name:"hotmart-setup", cat:"IA Machine", desc:"Configura checkout RMC ($47 USD con bonos)" },
+  { name:"landing-builder-pro", cat:"IA Machine", desc:"Páginas web profesionales con CRO integrado" },
+  { name:"sendgrid-activator", cat:"IA Machine", desc:"Configura SendGrid y activa los 5 triggers" },
+  { name:"audio-generator", cat:"IA Machine", desc:"Genera 7 audios RMC con edge-tts gratis" },
+  { name:"visual-prompt-generator", cat:"IA Machine", desc:"Prompts Midjourney/Leonardo/Runway con brand-kit" },
+  { name:"polt-ops-manager", cat:"IA Machine", desc:"Ops Polt en Google Sheets — reemplaza Excel" },
+  { name:"state-updater", cat:"IA Machine", desc:"Actualiza state.json con datos reales" },
+  { name:"copywriting", cat:"Marketing", desc:"Copy persuasivo con frameworks PAS, BAB, AIDA, 4U" },
+  { name:"email-sequence", cat:"Marketing", desc:"Secuencias de email automatizadas por tipo" },
+  { name:"paid-ads", cat:"Marketing", desc:"Creativos y estrategia de publicidad Meta/Google/TikTok" },
+  { name:"launch-strategy", cat:"Marketing", desc:"Estrategia completa de lanzamiento de producto" },
+  { name:"pricing-strategy", cat:"Marketing", desc:"Estructura de precios y proyección de LTV" },
+  { name:"content-strategy", cat:"Marketing", desc:"Estrategia de contenido por canal y objetivo" },
+  { name:"page-cro", cat:"Marketing", desc:"Optimización de conversión en landing pages" },
+  { name:"referral-program", cat:"Marketing", desc:"Programa de referidos con incentivos y flujo" },
+  { name:"market-money-finder", cat:"Cerebro", desc:"Oportunidades de negocio con cifras reales" },
+  { name:"monetization-orchestrator", cat:"Cerebro", desc:"9 agentes para modelo de monetización" },
+  { name:"opportunity-execution-commander", cat:"Cerebro", desc:"5 fases hasta primeros clientes" },
+];
+
+// ===== STATE =====
+let currentProject = 'mp';
+let currentFilter = 'all';
+let agentList = [...agents];
+let chart = null;
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+  renderDashboard('mp');
+  renderAgentsGrid('all');
+  renderProjects();
+  renderSkills('');
+});
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('current-time').textContent = now.toLocaleString('es-AR', { dateStyle:'short', timeStyle:'short' });
+}
+
+// ===== NAVIGATION =====
+function showSection(name) {
+  ['dashboard','agents','projects','inbox','skills'].forEach(s => {
+    document.getElementById('section-'+s).classList.add('hidden');
+    document.getElementById('nav-'+s)?.classList.remove('active');
+    document.getElementById('nav-'+s)?.querySelectorAll('span').forEach(el => el.classList.add('text-white/60'));
+  });
+  document.getElementById('section-'+name).classList.remove('hidden');
+  document.getElementById('nav-'+name)?.classList.add('active');
+  const titles = { dashboard:'Dashboard General', agents:'Agentes IA', projects:'Estado de Proyectos', inbox:'Inbox', skills:'Skills' };
+  document.getElementById('page-title').textContent = titles[name];
+}
+
+// ===== DASHBOARD =====
+function setProject(p) {
+  currentProject = p;
+  ['mp','polt','cerebro'].forEach(k => {
+    document.getElementById('tab-'+k).className = k === p
+      ? 'tab-active px-4 py-1.5 rounded-lg text-sm transition-all'
+      : 'px-4 py-1.5 rounded-lg text-sm text-white/50 transition-all hover:text-white';
+  });
+  renderDashboard(p);
+}
+
+function renderDashboard(p) {
+  const d = projects[p];
+  const fmt = (n) => p === 'polt' ? `$${(n/1000).toFixed(0)}k ARS` : `$${n.toLocaleString('en')} USD`;
+
+  document.getElementById('project-status-badge').className = `text-xs px-3 py-1.5 rounded-full ${d.label}`;
+  document.getElementById('project-status-badge').textContent = d.badge;
+  document.getElementById('kpi-today').textContent = fmt(d.kpi.today);
+  document.getElementById('kpi-month').textContent = fmt(d.kpi.month);
+  document.getElementById('kpi-month-sub').textContent = `Meta: ${p==='polt'?'$2M ARS':'$3.000 USD'}`;
+  document.getElementById('kpi-conv').textContent = `${d.kpi.conv}%`;
+  document.getElementById('kpi-leads').textContent = d.kpi.leads;
+  document.getElementById('kpi-leads-sub').textContent = p==='polt' ? 'leads activos' : 'suscriptores';
+  document.getElementById('chart-currency').textContent = d.kpi.currency;
+  document.getElementById('meta-label').textContent = d.meta;
+  const pct = Math.min(Math.round((d.kpi.month / d.kpi.goal)*100), 100);
+  document.getElementById('meta-bar').style.width = pct + '%';
+  document.getElementById('meta-bar').className = `progress-fill ${pct>=80?'bg-emerald-500':pct>=50?'bg-violet-500':'bg-amber-500'}`;
+  document.getElementById('meta-pct').textContent = `${pct}% completado`;
+
+  // Blockers
+  const bl = document.getElementById('blockers-list');
+  bl.innerHTML = d.blockers.map(b => `<div class="blocker-item"><div class="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"></div><span class="text-xs text-red-300">${b}</span></div>`).join('');
+
+  // Tasks
+  const tl = document.getElementById('tasks-list');
+  tl.innerHTML = d.tasks.map((t,i) => `
+    <div class="task-item" onclick="toggleTask(this)">
+      <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center shrink-0" id="check-${i}">
+        <svg width="9" height="9" fill="none" stroke="#10b981" stroke-width="3" viewBox="0 0 24 24" class="hidden"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span class="text-xs text-white/60">${t}</span>
+    </div>`).join('');
+
+  // Agents mini
+  const am = document.getElementById('agents-mini');
+  const projectAgents = agentList.filter(a => d.agents.includes(a.id));
+  am.innerHTML = projectAgents.map(a => `
+    <div class="flex items-center justify-between py-2 px-3 rounded-lg" style="background:rgba(255,255,255,0.03);">
+      <div class="flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full ${a.status==='running'?'bg-violet-400 pulse':'bg-white/20'}"></div>
+        <span class="text-xs text-white/70">${a.name}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] text-white/30">${a.nextRun}</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded-full status-idle">${a.status==='running'?'Ejecutando':'En espera'}</span>
+      </div>
+    </div>`).join('');
+
+  // Chart
+  const days = ['L','M','M','J','V','S','D'];
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels: days,
+      datasets:[{ data: d.chart, fill:true,
+        backgroundColor: (ctx) => { const g=ctx.chart.ctx.createLinearGradient(0,0,0,140); g.addColorStop(0,'rgba(124,58,237,0.3)'); g.addColorStop(1,'rgba(124,58,237,0)'); return g; },
+        borderColor:'#7c3aed', borderWidth:2, pointRadius:3, pointBackgroundColor:'#7c3aed', tension:0.4 }]
+    },
+    options:{ plugins:{legend:{display:false}}, scales:{
+      x:{ grid:{display:false}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:10}} },
+      y:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:10}} }
+    }, responsive:true, maintainAspectRatio:false }
+  });
+}
+
+function toggleTask(el) {
+  const check = el.querySelector('svg');
+  const border = el.querySelector('div');
+  check.classList.toggle('hidden');
+  border.classList.toggle('border-emerald-500/50');
+  border.classList.toggle('bg-emerald-500/10');
+  el.querySelector('span').classList.toggle('line-through');
+  el.querySelector('span').classList.toggle('text-white/25');
+}
+
+// ===== AGENTS =====
+function filterAgents(f) {
+  currentFilter = f;
+  ['all','mp','polt','cerebro','global'].forEach(k => {
+    document.getElementById('af-'+k).className = k===f
+      ? 'tab-active px-3 py-1.5 rounded-lg text-xs transition-all'
+      : 'px-3 py-1.5 rounded-lg text-xs text-white/50 transition-all hover:text-white';
+  });
+  renderAgentsGrid(f);
+}
+
+function renderAgentsGrid(f) {
+  const filtered = f==='all' ? agentList : agentList.filter(a=>a.project===f);
+  const grid = document.getElementById('agents-grid');
+  grid.innerHTML = filtered.map(a => agentCard(a)).join('');
+}
+
+function agentCard(a) {
+  const projectName = {mp:'Mente Pausada',polt:'Polt Mobilier',cerebro:'Cerebro',global:'Global'}[a.project];
+  const badge = {mp:'badge-mp',polt:'badge-polt',cerebro:'badge-cerebro',global:'badge-global'}[a.project];
+  const statusClass = {idle:'status-idle',running:'status-running',active:'status-active',error:'status-error'}[a.status];
+  const statusLabel = {idle:'En espera',running:'Ejecutando',active:'Activo',error:'Error'}[a.status];
+  return `
+    <div class="card p-4" id="agent-card-${a.id}">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background:rgba(124,58,237,0.15);">
+            <svg width="15" height="15" fill="none" stroke="#a78bfa" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0112 0v1"/></svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-white leading-tight">${a.name}</p>
+            <p class="text-xs text-white/40 mt-0.5 truncate">${a.desc}</p>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-1.5 shrink-0">
+          <span class="text-[10px] px-2 py-0.5 rounded-full ${badge}">${projectName}</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full ${statusClass} ${a.status==='running'?'pulse':''}">${statusLabel}</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="text-center p-2 rounded-lg" style="background:rgba(255,255,255,0.03);">
+          <p class="text-sm font-bold text-white">${a.runs}</p>
+          <p class="text-[10px] text-white/30 mt-0.5">Runs</p>
+        </div>
+        <div class="text-center p-2 rounded-lg" style="background:rgba(255,255,255,0.03);">
+          <p class="text-sm font-bold ${a.success>=95?'text-emerald-400':'text-amber-400'}">${a.success}%</p>
+          <p class="text-[10px] text-white/30 mt-0.5">Éxito</p>
+        </div>
+        <div class="text-center p-2 rounded-lg" style="background:rgba(255,255,255,0.03);">
+          <p class="text-[11px] font-medium text-white leading-tight">${a.nextRun.length>10?a.nextRun.slice(11):a.nextRun}</p>
+          <p class="text-[10px] text-white/30 mt-0.5">Próximo</p>
+        </div>
+      </div>
+      <div class="border-t border-white/[0.05] pt-3">
+        <p class="text-[10px] text-white/25 uppercase tracking-wider mb-2">Últimas acciones</p>
+        <div class="space-y-0.5 mb-3">
+          ${a.logs.map(l=>`<div class="log-line">${l}</div>`).join('')}
+        </div>
+        <div class="flex gap-2">
+          <button onclick="runAgent('${a.id}')" class="btn-primary flex-1 py-1.5 text-xs flex items-center justify-center gap-1.5">
+            <svg width="9" height="9" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Ejecutar ahora
+          </button>
+          <button class="btn-ghost px-3 py-1.5 text-xs">Editar</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function runAgent(id) {
+  const a = agentList.find(x=>x.id===id);
+  if (!a) return;
+  a.status = 'running';
+  renderAgentsGrid(currentFilter);
+  notify(`▶ ${a.name} ejecutándose...`);
+  setTimeout(() => {
+    const now = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    a.status = 'idle';
+    a.runs++;
+    a.lastRun = new Date().toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
+    a.logs = [`[${now}] Ejecución manual completada ✓`, ...a.logs.slice(0,2)];
+    renderAgentsGrid(currentFilter);
+    notify(`✓ ${a.name} completado`);
+  }, 2800);
+}
+
+// ===== PROJECTS =====
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = Object.entries(projects).map(([key, p]) => `
+    <div class="card p-6">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" style="background:rgba(255,255,255,0.06);">
+            ${key==='mp'?'🧠':key==='polt'?'🪑':'🔭'}
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-white">${p.name}</h2>
+            <p class="text-xs text-white/40">Prioridad ${p.priority}</p>
+          </div>
+        </div>
+        <span class="text-sm font-bold ${p.pct===0?'text-white/30':p.pct>=80?'text-emerald-400':'text-amber-400'}">${p.pct}%</span>
+      </div>
+      <div class="progress-bar mb-4">
+        <div class="progress-fill ${p.pct>=80?'bg-emerald-500':p.pct>=50?'bg-violet-500':'bg-amber-500'}" style="width:${p.pct}%"></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div>
+          <p class="text-[10px] text-white/30 uppercase tracking-wider mb-2">Blockers (${p.blockers.length})</p>
+          ${p.blockers.map(b=>`<div class="blocker-item"><svg width="10" height="10" fill="#f87171" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12" stroke="white" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="white" stroke-width="2"/></svg><span class="text-xs text-red-300/70">${b}</span></div>`).join('')}
+        </div>
+        <div>
+          <p class="text-[10px] text-white/30 uppercase tracking-wider mb-2">Próximas tareas</p>
+          ${p.tasks.slice(0,3).map(t=>`
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="w-4 h-4 rounded border border-white/15 flex items-center justify-center shrink-0">
+                <svg width="9" height="9" fill="none" stroke="#10b981" stroke-width="3" viewBox="0 0 24 24" class="hidden"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="text-xs text-white/50">${t}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== SKILLS =====
+function renderSkills(q) {
+  const filtered = q ? skills.filter(s=>s.name.includes(q.toLowerCase())||s.desc.toLowerCase().includes(q.toLowerCase())) : skills;
+  const catColors = {'IA Machine':'badge-mp','Marketing':'badge-polt','Cerebro':'badge-cerebro'};
+  document.getElementById('skills-grid').innerHTML = filtered.map(s=>`
+    <div class="card p-4 cursor-pointer hover:border-violet-600/40 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] px-2 py-0.5 rounded-full ${catColors[s.cat]||'badge-global'}">${s.cat}</span>
+        <svg width="12" height="12" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </div>
+      <p class="text-sm font-medium text-white mb-1">/${s.name}</p>
+      <p class="text-xs text-white/40 leading-relaxed">${s.desc}</p>
+    </div>`).join('');
+}
+
+function filterSkills(q) { renderSkills(q); }
+
+// ===== MODAL =====
+function openNewAgentModal() { document.getElementById('modal').classList.remove('hidden'); }
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+function createAgent() {
+  const name = document.querySelector('#modal input').value || 'Nuevo Agente';
+  const project = document.querySelector('#modal select').value;
+  const projectKey = {['Mente Pausada']:'mp','Polt Mobilier':'polt','Cerebro':'cerebro','Global':'global'}[project] || 'global';
+  const newAgent = {
+    id: 'agent-'+Date.now(), name, desc:'Agente recién creado — editar prompt para activar',
+    project: projectKey, status:'idle', lastRun:'—', nextRun:'Manual',
+    runs:0, success:100, logs:['[nuevo] Agente creado — sin ejecuciones aún']
+  };
+  agentList.push(newAgent);
+  closeModal();
+  showSection('agents');
+  renderAgentsGrid('all');
+  filterAgents('all');
+  notify(`✓ Agente "${name}" creado`);
+}
+
+// ===== INBOX =====
+function processFile(el) {
+  el.style.opacity = '0.4';
+  el.style.textDecoration = 'line-through';
+  notify('✓ Archivo procesado y distribuido');
+}
+
+// ===== NOTIFICATIONS =====
+function notify(msg) {
+  const n = document.createElement('div');
+  n.className = 'notification';
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(()=>{ n.style.opacity='0'; n.style.transition='opacity 0.3s'; setTimeout(()=>n.remove(),300); }, 2500);
+}
+</script>
+</body>
+</html>

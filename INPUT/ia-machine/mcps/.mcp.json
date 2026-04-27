@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "supadata": {
+      "command": "npx",
+      "args": ["-y", "supadata-mcp"],
+      "description": "Transcribe y analiza videos de YouTube, TikTok, Instagram. Usar para Cerebro scanner y análisis de competidores.",
+      "status": "pending-install"
+    },
+    "apify": {
+      "command": "npx",
+      "args": ["-y", "@apify/actors-mcp-server"],
+      "description": "Scraping web profesional. Leads, precios competidores, tendencias de mercado.",
+      "status": "pending-install"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "description": "Browser propio — screenshots, tests web, scraping de páginas dinámicas.",
+      "status": "pending-install"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\lucas\\AppData\\Roaming\\Claude\\CLAUDE"],
+      "description": "Acceso al sistema de archivos del proyecto. Ya disponible en Claude Code.",
+      "status": "built-in"
+    }
+  },
+  "notes": {
+    "install": "Para instalar: agregar al claude_desktop_config.json o ejecutar directamente desde Claude Code",
+    "last30days": "Skill disponible en awesome-skills.com — instalar cuando se necesite",
+    "priority": "Instalar en orden: playwright → apify → supadata"
+  }
+}

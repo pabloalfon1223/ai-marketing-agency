@@ -1,0 +1,85 @@
+{
+  "version": "1.1",
+  "lastUpdated": "2026-04-24",
+  "global": {
+    "activeProjects": ["mente-pausada", "polt-mobilier", "cerebro"],
+    "systemHealth": "operational",
+    "activeAgents": 0,
+    "totalRuns": 0
+  },
+  "mentePausada": {
+    "status": "80%",
+    "priority": 1,
+    "pendingTasks": [
+      "Configurar Hotmart + checkout ($47 USD con bonos)",
+      "Deploy ruidomentalcero.com (base: lovable.app)",
+      "Activar Content Director trigger 7AM",
+      "Primera campaña Meta Ads (mercado México primero)"
+    ],
+    "kpis": {
+      "revenueMes": 0,
+      "metaMes": 3000,
+      "ventas": 0,
+      "conversion": 0
+    },
+    "precio": "$47 USD con bonos",
+    "mercado": "hispanohablante global — MX, CO, CL, ES, hispanos EEUU",
+    "landing": "www.ruidomentalcero.com (en construcción) | ruidomentalcero.lovable.app (base)",
+    "lastContentRun": null,
+    "nextContentRun": "2026-04-25T07:00:00-03:00"
+  },
+  "poltMobilier": {
+    "status": "50%",
+    "priority": 2,
+    "pendingTasks": [
+      "Crear Google Sheet Polt Ops (reemplaza Excel)",
+      "Instalar WhatsApp bot Whapi.cloud",
+      "Completar Polt Calculator Pro (web)",
+      "Pipeline de leads activo"
+    ],
+    "kpis": {
+      "leadsActivos": 4,
+      "propuestasEnviadas": 2,
+      "cerradasMes": 1,
+      "revenueMes": 320000
+    },
+    "lastContentRun": null,
+    "nextContentRun": "2026-04-25T09:00:00-03:00"
+  },
+  "cerebro": {
+    "status": "0%",
+    "priority": 3,
+    "pendingTasks": [
+      "Configurar Market Scanner",
+      "Conectar Supadata MCP",
+      "Primera análisis de oportunidades",
+      "Setup Apify scraping"
+    ],
+    "kpis": {
+      "oportunidadesAnalizadas": 0,
+      "oportunidadesTop": 0,
+      "experimentos": 0
+    },
+    "lastScanRun": null,
+    "nextScanRun": "2026-04-28T09:00:00-03:00"
+  },
+  "triggers": {
+    "daily-content-mp": { "id": "trig_01Dzrvfv5cRPgpZqZECKTMdQ", "status": "ready", "schedule": "07:00 ARG" },
+    "polt-contenido": { "id": "trig_01Ejb3VtrRZB16cEQsaHsD7t", "status": "ready", "schedule": "09:00 ARG" },
+    "cerebro-scanner": { "id": "trig_0137Yso9ckqHFFpgC2sGVAnJ", "status": "ready", "schedule": "Lunes 09:00 ARG" },
+    "daily-digest": { "id": "trig_015iu2VG92yiAu36MWdargm6", "status": "ready", "schedule": "08:00 ARG" },
+    "daily-analytics": { "id": "trig_01UgD4bxJwaL7xBoSZixYunh", "status": "ready", "schedule": "17:00 ARG" }
+  },
+  "integrations": {
+    "sendgrid": "configured",
+    "hotmart": "pending",
+    "whapi": "pending",
+    "supadata": "pending",
+    "apify": "pending"
+  },
+  "blockers": [
+    "Hotmart sin configurar → sin checkout no hay ventas de MP",
+    "ruidomentalcero.com sin deploy",
+    "WhatsApp bot sin configurar para Polt"
+  ]
+}

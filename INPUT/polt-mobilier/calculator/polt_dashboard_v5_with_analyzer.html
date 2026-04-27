@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polt Calculator Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #999;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+
+        .tab-btn:hover {
+            color: #d4af37;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 18px;
+            color: #d4af37;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #bbb;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .preview-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            overflow: hidden;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
+        .component-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .component-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .component-header h4 {
+            color: #d4af37;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .remove-btn {
+            background: rgba(255, 67, 67, 0.2);
+            border: 1px solid rgba(255, 67, 67, 0.5);
+            color: #ff4343;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 67, 67, 0.3);
+        }
+
+        .component-labels {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.7rem;
+            color: #999;
+            font-weight: 500;
+            text-transform: uppercase;
+            padding: 0 0 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .component-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .component-content input {
+            padding: 6px 8px;
+            font-size: 0.85rem;
+        }
+
+        .m2-badge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 6px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .summary-grid {
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            color: #999;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            color: #d4af37;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .cost-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cost-line {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.9rem;
+        }
+
+        .cost-line:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .cost-label {
+            color: #bbb;
+        }
+
+        .cost-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .final-price-box {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .final-price-label {
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .final-price-value {
+            color: #d4af37;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .cuts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .cuts-table th {
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .cuts-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #bbb;
+        }
+
+        .cuts-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .success-message,
+        .error-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+        }
+
+        .error-message {
+            background: rgba(255, 67, 67, 0.2);
+            border: 1px solid rgba(255, 67, 67, 0.5);
+            color: #ff4343;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #d4af37;
+        }
+
+        .spinner {
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Polt Calculator Pro</h1>
+            <p>Sistema profesional de presupuestos para muebles a medida</p>
+        </div>
+
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="cambiarTab('presupuesto')">💰 Presupuesto Clásico</button>
+            <button class="tab-btn" onclick="cambiarTab('analizador')">🔧 Analizador de Cortes</button>
+        </div>
+
+        <!-- TAB 1: PRESUPUESTO CLÁSICO -->
+        <div id="presupuesto" class="tab-content active">
+            <div class="main-grid">
+                <!-- LEFT: Inputs -->
+                <div class="card">
+                    <h2>📋 Configuración</h2>
+
+                    <div class="success-message" id="successMsg"></div>
+                    <div class="error-message" id="errorMsg"></div>
+
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="cliente" placeholder="Nombre del cliente" oninput="actualizarPresupuesto()">
+                    </div>
+
+                    <h2 style="margin-top: 24px;">📐 Dimensiones Generales</h2>
+
+                    <div class="row-3">
+                        <div class="form-group">
+                            <label>Alto (cm)</label>
+                            <input type="number" id="alto" value="240" placeholder="240" oninput="actualizarPresupuesto()">
+                        </div>
+                        <div class="form-group">
+                            <label>Ancho (cm)</label>
+                            <input type="number" id="ancho" value="100" placeholder="100" oninput="actualizarPresupuesto()">
+                        </div>
+                        <div class="form-group">
+                            <label>Profundidad (cm)</label>
+                            <input type="number" id="profundo" value="45" placeholder="45" oninput="actualizarPresupuesto()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Render del Mueble</label>
+                        <input type="file" id="renderImg" accept="image/*" onchange="cargarRender()">
+                    </div>
+
+                    <div class="preview-box" id="previewBox">
+                        📸 Sube una foto o render del mueble
+                    </div>
+
+                    <h2>🎨 Material</h2>
+
+                    <div class="form-group">
+                        <label>Tipo de Mueble</label>
+                        <select id="tipoMueble" onchange="cargarComponentes()">
+                            <option value="">-- Selecciona tipo --</option>
+                            <option value="Placard">Placard</option>
+                            <option value="Biblioteca">Biblioteca</option>
+                            <option value="Cocina">Cocina</option>
+                            <option value="Vestidor">Vestidor</option>
+                            <option value="Escritorio">Escritorio</option>
+                            <option value="Custom">Otro (Custom)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Material</label>
+                        <select id="material" oninput="actualizarPresupuesto()">
+                            <option value="Melamina Blanca">Melamina Blanca</option>
+                            <option value="Melamina Negra">Melamina Negra</option>
+                            <option value="MDF">MDF</option>
+                            <option value="Madera Maciza">Madera Maciza</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Costo por Placa (ARS)</label>
+                        <input type="number" id="costPerPlaca" value="5000" placeholder="5000" oninput="actualizarPresupuesto()">
+                    </div>
+
+                    <h2 style="margin-top: 24px;">⚙️ Parámetros</h2>
+
+                    <div class="form-group">
+                        <label>Desperdicio (%)</label>
+                        <input type="number" id="desperdicio" value="20" min="0" max="100" oninput="actualizarPresupuesto()">
+                    </div>
+
+                    <div class="multiplier-grid">
+                        <div>
+                            <label style="font-size: 0.8rem;">Laqueado</label>
+                            <select id="multLaqueado" oninput="actualizarPresupuesto()" style="width: 100%;">
+                                <option value="1.0">1.0</option>
+                                <option value="1.5">1.5</option>
+                                <option value="2.0">2.0</option>
+                                <option value="2.5">2.5</option>
+                                <option value="3.0">3.0</option>
+                                <option value="3.5">3.5</option>
+                                <option value="4.0">4.0</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem;">Mano de Obra</label>
+                            <select id="multLabor" oninput="actualizarPresupuesto()" style="width: 100%;">
+                                <option value="1.0">1.0</option>
+                                <option value="1.5">1.5</option>
+                                <option value="2.0">2.0</option>
+                                <option value="2.5">2.5</option>
+                                <option value="3.0">3.0</option>
+                                <option value="3.5">3.5</option>
+                                <option value="4.0">4.0</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem;">Ganancia</label>
+                            <select id="multGanancia" oninput="actualizarPresupuesto()" style="width: 100%;">
+                                <option value="1.0">1.0</option>
+                                <option value="1.5">1.5</option>
+                                <option value="2.0">2.0</option>
+                                <option value="2.5">2.5</option>
+                                <option value="3.0">3.0</option>
+                                <option value="3.5">3.5</option>
+                                <option value="4.0">4.0</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h2 style="margin-top: 24px;">🔧 Componentes</h2>
+                    <div id="componentesContainer"></div>
+                </div>
+
+                <!-- RIGHT: Summary & Costs -->
+                <div class="card">
+                    <h2>💰 Presupuesto</h2>
+
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Área</div>
+                            <div class="summary-value" id="areaValue">0.00 m²</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Desperdicio</div>
+                            <div class="summary-value" id="desperdicioValue">0.00 m²</div>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Total</div>
+                            <div class="summary-value" id="totalValue">0.00 m²</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Placas</div>
+                            <div class="summary-value" id="placasValue">0</div>
+                        </div>
+                    </div>
+
+                    <div class="final-price-box">
+                        <div class="final-price-label">PRESUPUESTO FINAL</div>
+                        <div class="final-price-value" id="precioFinal">$0</div>
+                    </div>
+
+                    <h2>📊 Desglose</h2>
+
+                    <div class="cost-section">
+                        <div class="cost-line">
+                            <span class="cost-label">Material</span>
+                            <span class="cost-value" id="materialCost">$0</span>
+                        </div>
+                        <div class="cost-line">
+                            <span class="cost-label">+ Laqueado</span>
+                            <span class="cost-value" id="laqueadoCost">$0</span>
+                        </div>
+                        <div class="cost-line">
+                            <span class="cost-label">+ Mano de Obra</span>
+                            <span class="cost-value" id="laborCost">$0</span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="guardarEnSheets()">💾 Guardar en Sheets</button>
+                        <button class="btn btn-secondary" onclick="limpiar()">🔄 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ANALIZADOR DE CORTES -->
+        <div id="analizador" class="tab-content">
+            <div class="main-grid">
+                <div class="card">
+                    <h2>🔍 Análisis de Mueble</h2>
+
+                    <div class="success-message" id="analyzerSuccessMsg"></div>
+                    <div class="error-message" id="analyzerErrorMsg"></div>
+
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="analyzerCliente" placeholder="Nombre del cliente">
+                    </div>
+
+                    <h2 style="margin-top: 24px;">📐 Medidas del Mueble</h2>
+
+                    <div class="row-3">
+                        <div class="form-group">
+                            <label>Alto (cm)</label>
+                            <input type="number" id="analyzerAlto" value="240" placeholder="240">
+                        </div>
+                        <div class="form-group">
+                            <label>Ancho (cm)</label>
+                            <input type="number" id="analyzerAncho" value="80" placeholder="80">
+                        </div>
+                        <div class="form-group">
+                            <label>Profundidad (cm)</label>
+                            <input type="number" id="analyzerProfundo" value="45" placeholder="45">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto o Render del Mueble</label>
+                        <input type="file" id="analyzerRenderImg" accept="image/*" onchange="cargarAnalyzerRender()">
+                    </div>
+
+                    <div class="preview-box" id="analyzerPreviewBox">
+                        📸 Sube una foto o render del mueble
+                    </div>
+
+                    <h2 style="margin-top: 24px;">🪵 Componentes Detectados</h2>
+
+                    <div class="form-group">
+                        <label>Describe los componentes que tiene el mueble (ej: 2 laterales, 1 techo, 1 piso, 3 estantes)</label>
+                        <textarea id="analyzerComponentes" placeholder="Ej: 2 laterales, 1 techo, 1 piso, 3 estantes, 2 puertas"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de Material</label>
+                        <select id="analyzerMaterial">
+                            <option value="Melamina">Melamina (18mm)</option>
+                            <option value="MDF">MDF (18mm)</option>
+                            <option value="Madera Maciza">Madera Maciza (25mm)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Costo por Placa (ARS) - Placa 260×183cm</label>
+                        <input type="number" id="analyzerCostPerPlaca" value="5000" placeholder="5000">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="analizarCortes()" style="width: 100%; margin-top: 20px;">
+                        🔍 Analizar y Calcular Cortes
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Resultado del Análisis</h2>
+
+                    <div id="analyzerLoadingDiv" class="loading">
+                        <div class="spinner"></div>
+                        <p>Analizando mueble...</p>
+                    </div>
+
+                    <div id="analyzerResultDiv" style="display: none;">
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="summary-label">Placas Necesarias</div>
+                                <div class="summary-value" id="analyzerPlacasNeeded">0</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Eficiencia</div>
+                                <div class="summary-value" id="analyzerEfficiency">0%</div>
+                            </div>
+                        </div>
+
+                        <h2 style="margin-top: 20px; font-size: 1rem;">Cortes Requeridos</h2>
+                        <table class="cuts-table">
+                            <thead>
+                                <tr>
+                                    <th>Componente</th>
+                                    <th>Qty</th>
+                                    <th>Largo (cm)</th>
+                                    <th>Ancho (cm)</th>
+                                    <th>m²</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyzerCutsTable">
+                            </tbody>
+                        </table>
+
+                        <div class="final-price-box">
+                            <div class="final-price-label">COSTO MATERIAL ESTIMADO</div>
+                            <div class="final-price-value" id="analyzerFinalCost">$0</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observaciones</label>
+                            <textarea id="analyzerObservaciones" readonly style="min-height: 100px;"></textarea>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="guardarAnalisisEnSheets()" style="width: 100%; margin-top: 20px;">
+                            💾 Guardar Análisis en Sheets
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://script.google.com/macros/d/AKfycbzz7g5bCDg8XvqB2fQ5tTa6E8vf4l0lhZmJmVL1qU6hQUCXVoAYRxJiHUdkDh0g3Hg/useFunctionByName?name=doPost';
+        const AREA_PLACA = 4.46; // 2.44m × 1.83m
+        const AREA_PLACA_CM2 = 47580; // 260 × 183
+
+        const PRESETS = {
+            'Placard': [
+                { tipo: 'Lateral', qty: 2, ancho: 18, alto: 240, profundo: 45 },
+                { tipo: 'Techo', qty: 1, ancho: 80, alto: 18, profundo: 45 },
+                { tipo: 'Piso', qty: 1, ancho: 80, alto: 18, profundo: 45 },
+                { tipo: 'Fondo', qty: 1, ancho: 80, alto: 240, profundo: 5 },
+                { tipo: 'Estante', qty: 3, ancho: 80, alto: 18, profundo: 45 }
+            ],
+            'Biblioteca': [
+                { tipo: 'Lateral', qty: 2, ancho: 18, alto: 240, profundo: 35 },
+                { tipo: 'Techo', qty: 1, ancho: 100, alto: 18, profundo: 35 },
+                { tipo: 'Piso', qty: 1, ancho: 100, alto: 18, profundo: 35 },
+                { tipo: 'Fondo', qty: 1, ancho: 100, alto: 240, profundo: 5 },
+                { tipo: 'Estante', qty: 5, ancho: 100, alto: 18, profundo: 35 }
+            ],
+            'Cocina': [
+                { tipo: 'Lateral', qty: 2, ancho: 18, alto: 90, profundo: 60 },
+                { tipo: 'Techo', qty: 1, ancho: 200, alto: 18, profundo: 60 },
+                { tipo: 'Piso', qty: 1, ancho: 200, alto: 18, profundo: 60 },
+                { tipo: 'Estante', qty: 2, ancho: 200, alto: 18, profundo: 60 }
+            ]
+        };
+
+        let componentes = [];
+        let analyzerData = null;
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ===== TAB 1: PRESUPUESTO CLÁSICO =====
+
+        function cargarRender() {
+            const file = document.getElementById('renderImg').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('previewBox').innerHTML = `<img src="${e.target.result}" alt="Render">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function cargarComponentes() {
+            const tipo = document.getElementById('tipoMueble').value;
+
+            if (tipo === 'Custom' || tipo === '') {
+                componentes = [];
+            } else if (PRESETS[tipo]) {
+                componentes = PRESETS[tipo].map((c, i) => ({
+                    ...c,
+                    id: Date.now() + i
+                }));
+            }
+
+            renderizarComponentes();
+            actualizarPresupuesto();
+        }
+
+        function renderizarComponentes() {
+            const container = document.getElementById('componentesContainer');
+
+            if (componentes.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-size: 0.85rem;">Selecciona un tipo de mueble para cargar componentes</p>';
+                return;
+            }
+
+            container.innerHTML = componentes.map(comp => `
+                <div class="component-box">
+                    <div class="component-header">
+                        <h4>${comp.tipo}</h4>
+                        <button class="remove-btn" onclick="eliminarComponente(${comp.id})">Eliminar</button>
+                    </div>
+                    <div class="component-labels">
+                        <div>Qty</div>
+                        <div>Ancho (cm)</div>
+                        <div>Alto (cm)</div>
+                        <div>Profundo (cm)</div>
+                        <div>m²</div>
+                    </div>
+                    <div class="component-content">
+                        <input type="number" value="${comp.qty}" min="1" placeholder="Qty" oninput="actualizarComp(${comp.id}, 'qty', this.value)">
+                        <input type="number" value="${comp.ancho}" placeholder="Ancho" oninput="actualizarComp(${comp.id}, 'ancho', this.value)">
+                        <input type="number" value="${comp.alto}" placeholder="Alto" oninput="actualizarComp(${comp.id}, 'alto', this.value)">
+                        <input type="number" value="${comp.profundo}" placeholder="Prof" oninput="actualizarComp(${comp.id}, 'profundo', this.value)">
+                        <div class="m2-badge">${(comp.qty * comp.ancho * comp.alto / 10000).toFixed(3)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function actualizarComp(id, campo, valor) {
+            const comp = componentes.find(c => c.id === id);
+            if (comp) {
+                comp[campo] = parseFloat(valor) || 0;
+                renderizarComponentes();
+                actualizarPresupuesto();
+            }
+        }
+
+        function eliminarComponente(id) {
+            componentes = componentes.filter(c => c.id !== id);
+            renderizarComponentes();
+            actualizarPresupuesto();
+        }
+
+        function actualizarPresupuesto() {
+            const areaBase = componentes.reduce((sum, c) => {
+                return sum + (c.qty * c.ancho * c.alto / 10000);
+            }, 0);
+
+            const desperdicio = parseFloat(document.getElementById('desperdicio').value) / 100;
+            const areaDesperdicio = areaBase * desperdicio;
+            const areaTotal = areaBase + areaDesperdicio;
+            const placasNeeded = Math.ceil(areaTotal / AREA_PLACA);
+
+            const costPerPlaca = parseFloat(document.getElementById('costPerPlaca').value) || 0;
+            const materialCost = placasNeeded * costPerPlaca;
+
+            const multLaq = parseFloat(document.getElementById('multLaqueado').value) || 1;
+            const multLab = parseFloat(document.getElementById('multLabor').value) || 1;
+            const multGan = parseFloat(document.getElementById('multGanancia').value) || 1;
+
+            const laqueadoCost = materialCost * (multLaq - 1);
+            const laborCost = materialCost * (multLab - 1);
+            const subtotal = materialCost + laqueadoCost + laborCost;
+            const finalPrice = subtotal * multGan;
+
+            document.getElementById('areaValue').textContent = areaBase.toFixed(2) + ' m²';
+            document.getElementById('desperdicioValue').textContent = areaDesperdicio.toFixed(2) + ' m²';
+            document.getElementById('totalValue').textContent = areaTotal.toFixed(2) + ' m²';
+            document.getElementById('placasValue').textContent = placasNeeded;
+
+            document.getElementById('materialCost').textContent = '$' + materialCost.toLocaleString('es-AR', {maximumFractionDigits: 0});
+            document.getElementById('laqueadoCost').textContent = '$' + laqueadoCost.toLocaleString('es-AR', {maximumFractionDigits: 0});
+            document.getElementById('laborCost').textContent = '$' + laborCost.toLocaleString('es-AR', {maximumFractionDigits: 0});
+            document.getElementById('precioFinal').textContent = '$' + finalPrice.toLocaleString('es-AR', {maximumFractionDigits: 0});
+        }
+
+        async function guardarEnSheets() {
+            const areaBase = componentes.reduce((sum, c) => {
+                return sum + (c.qty * c.ancho * c.alto / 10000);
+            }, 0);
+
+            const desperdicio = parseFloat(document.getElementById('desperdicio').value) / 100;
+            const areaDesperdicio = areaBase * desperdicio;
+            const areaTotal = areaBase + areaDesperdicio;
+            const placasNeeded = Math.ceil(areaTotal / AREA_PLACA);
+
+            const costPerPlaca = parseFloat(document.getElementById('costPerPlaca').value) || 0;
+            const materialCost = placasNeeded * costPerPlaca;
+
+            const multLaq = parseFloat(document.getElementById('multLaqueado').value) || 1;
+            const multLab = parseFloat(document.getElementById('multLabor').value) || 1;
+            const multGan = parseFloat(document.getElementById('multGanancia').value) || 1;
+
+            const laqueadoCost = materialCost * (multLaq - 1);
+            const laborCost = materialCost * (multLab - 1);
+            const subtotal = materialCost + laqueadoCost + laborCost;
+            const finalPrice = subtotal * multGan;
+
+            const datos = {
+                cliente: document.getElementById('cliente').value || 'Sin especificar',
+                tipoMueble: document.getElementById('tipoMueble').value,
+                dimensiones: `${document.getElementById('alto').value} × ${document.getElementById('ancho').value} × ${document.getElementById('profundo').value}`,
+                material: document.getElementById('material').value,
+                m2Base: areaBase.toFixed(3),
+                m2Desperdicio: areaDesperdicio.toFixed(3),
+                m2Total: areaTotal.toFixed(3),
+                costPerM2: (costPerPlaca / AREA_PLACA).toFixed(2),
+                materialCost: materialCost.toFixed(2),
+                multLaqueado: multLaq,
+                multLabor: multLab,
+                multGanancia: multGan,
+                finalPrice: finalPrice.toFixed(2)
+            };
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await response.json();
+                if (resultado.success) {
+                    document.getElementById('successMsg').textContent = '✅ Presupuesto guardado exitosamente';
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('errorMsg').style.display = 'none';
+                    setTimeout(() => {
+                        document.getElementById('successMsg').style.display = 'none';
+                    }, 4000);
+                }
+            } catch (error) {
+                document.getElementById('errorMsg').textContent = '❌ Error: ' + error.message;
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+
+        function limpiar() {
+            document.getElementById('cliente').value = '';
+            document.getElementById('alto').value = '240';
+            document.getElementById('ancho').value = '100';
+            document.getElementById('profundo').value = '45';
+            document.getElementById('tipoMueble').value = '';
+            document.getElementById('material').value = 'Melamina Blanca';
+            document.getElementById('costPerPlaca').value = '5000';
+            document.getElementById('desperdicio').value = '20';
+            document.getElementById('multLaqueado').value = '1.0';
+            document.getElementById('multLabor').value = '1.0';
+            document.getElementById('multGanancia').value = '1.5';
+            document.getElementById('renderImg').value = '';
+            document.getElementById('previewBox').innerHTML = '📸 Sube una foto o render del mueble';
+            componentes = [];
+            renderizarComponentes();
+            actualizarPresupuesto();
+        }
+
+        // ===== TAB 2: ANALIZADOR DE CORTES =====
+
+        function cargarAnalyzerRender() {
+            const file = document.getElementById('analyzerRenderImg').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('analyzerPreviewBox').innerHTML = `<img src="${e.target.result}" alt="Render">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function analizarCortes() {
+            const alto = parseInt(document.getElementById('analyzerAlto').value);
+            const ancho = parseInt(document.getElementById('analyzerAncho').value);
+            const profundo = parseInt(document.getElementById('analyzerProfundo').value);
+            const componentes = document.getElementById('analyzerComponentes').value;
+
+            if (!alto || !ancho || !profundo || !componentes) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+
+            document.getElementById('analyzerLoadingDiv').style.display = 'block';
+            document.getElementById('analyzerResultDiv').style.display = 'none';
+
+            // Simulación de análisis - en producción se enviaría a API
+            setTimeout(() => {
+                const cortes = generarCortes(alto, ancho, profundo, componentes);
+                mostrarResultadoAnalisis(cortes, alto, ancho, profundo);
+            }, 2000);
+        }
+
+        function generarCortes(alto, ancho, profundo, descripcion) {
+            const cortes = [];
+            let id = 1;
+
+            // Parsing simple de la descripción
+            const desc = descripcion.toLowerCase();
+
+            // Laterales
+            if (desc.includes('lateral')) {
+                const match = desc.match(/(\d+)\s*lateral/);
+                const qty = match ? parseInt(match[1]) : 2;
+                cortes.push({
+                    id: id++,
+                    componente: 'Lateral',
+                    qty: qty,
+                    largo: alto,
+                    ancho: profundo,
+                    area: (qty * alto * profundo)
+                });
+            }
+
+            // Techo
+            if (desc.includes('techo')) {
+                cortes.push({
+                    id: id++,
+                    componente: 'Techo',
+                    qty: 1,
+                    largo: ancho,
+                    ancho: profundo,
+                    area: ancho * profundo
+                });
+            }
+
+            // Piso
+            if (desc.includes('piso')) {
+                cortes.push({
+                    id: id++,
+                    componente: 'Piso',
+                    qty: 1,
+                    largo: ancho,
+                    ancho: profundo,
+                    area: ancho * profundo
+                });
+            }
+
+            // Estantes
+            if (desc.includes('estante')) {
+                const match = desc.match(/(\d+)\s*estante/);
+                const qty = match ? parseInt(match[1]) : 1;
+                cortes.push({
+                    id: id++,
+                    componente: 'Estante',
+                    qty: qty,
+                    largo: ancho,
+                    ancho: profundo,
+                    area: qty * ancho * profundo
+                });
+            }
+
+            // Fondo
+            if (desc.includes('fondo')) {
+                cortes.push({
+                    id: id++,
+                    componente: 'Fondo',
+                    qty: 1,
+                    largo: alto,
+                    ancho: ancho,
+                    area: alto * ancho
+                });
+            }
+
+            // Puertas
+            if (desc.includes('puerta')) {
+                const match = desc.match(/(\d+)\s*puerta/);
+                const qty = match ? parseInt(match[1]) : 1;
+                cortes.push({
+                    id: id++,
+                    componente: 'Puerta',
+                    qty: qty,
+                    largo: (alto - 36) / qty,
+                    ancho: ancho / qty,
+                    area: qty * ((alto - 36) / qty) * (ancho / qty)
+                });
+            }
+
+            return cortes;
+        }
+
+        function mostrarResultadoAnalisis(cortes, alto, ancho, profundo) {
+            const totalArea = cortes.reduce((sum, c) => sum + c.area, 0);
+            const placasNeeded = Math.ceil(totalArea / AREA_PLACA_CM2);
+            const efficiency = ((totalArea / (placasNeeded * AREA_PLACA_CM2)) * 100).toFixed(1);
+            const costPerPlaca = parseFloat(document.getElementById('analyzerCostPerPlaca').value);
+            const finalCost = placasNeeded * costPerPlaca;
+
+            // Mostrar tabla de cortes
+            const tbody = document.getElementById('analyzerCutsTable');
+            tbody.innerHTML = cortes.map(c => `
+                <tr>
+                    <td>${c.componente}</td>
+                    <td>${c.qty}</td>
+                    <td>${c.largo.toFixed(0)}</td>
+                    <td>${c.ancho.toFixed(0)}</td>
+                    <td>${(c.area / 10000).toFixed(3)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('analyzerPlacasNeeded').textContent = placasNeeded;
+            document.getElementById('analyzerEfficiency').textContent = efficiency + '%';
+            document.getElementById('analyzerFinalCost').textContent = '$' + finalCost.toLocaleString('es-AR', {maximumFractionDigits: 0});
+            document.getElementById('analyzerObservaciones').value = `Se analizó el mueble de ${alto}x${ancho}x${profundo}cm. Se identificaron ${cortes.length} tipos de componentes. La eficiencia de corte es del ${efficiency}%, utilizando ${placasNeeded} placa(s) de 260x183cm.`;
+
+            analyzerData = {
+                cortes,
+                placasNeeded,
+                efficiency,
+                finalCost,
+                totalArea
+            };
+
+            document.getElementById('analyzerLoadingDiv').style.display = 'none';
+            document.getElementById('analyzerResultDiv').style.display = 'block';
+        }
+
+        async function guardarAnalisisEnSheets() {
+            if (!analyzerData) return;
+
+            const datos = {
+                cliente: document.getElementById('analyzerCliente').value || 'Sin especificar',
+                tipoMueble: 'Análisis de Cortes',
+                dimensiones: `${document.getElementById('analyzerAlto').value} × ${document.getElementById('analyzerAncho').value} × ${document.getElementById('analyzerProfundo').value}`,
+                material: document.getElementById('analyzerMaterial').value,
+                m2Base: (analyzerData.totalArea / 10000).toFixed(3),
+                m2Desperdicio: ((analyzerData.placasNeeded * AREA_PLACA_CM2 - analyzerData.totalArea) / 10000).toFixed(3),
+                m2Total: (analyzerData.placasNeeded * AREA_PLACA_CM2 / 10000).toFixed(3),
+                costPerM2: (analyzerData.finalCost / (analyzerData.placasNeeded * AREA_PLACA_CM2 / 10000)).toFixed(2),
+                materialCost: analyzerData.finalCost.toFixed(2),
+                multLaqueado: 1,
+                multLabor: 1,
+                multGanancia: 1,
+                finalPrice: analyzerData.finalCost.toFixed(2)
+            };
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await response.json();
+                if (resultado.success) {
+                    document.getElementById('analyzerSuccessMsg').textContent = '✅ Análisis guardado exitosamente';
+                    document.getElementById('analyzerSuccessMsg').style.display = 'block';
+                    document.getElementById('analyzerErrorMsg').style.display = 'none';
+                    setTimeout(() => {
+                        document.getElementById('analyzerSuccessMsg').style.display = 'none';
+                    }, 4000);
+                }
+            } catch (error) {
+                document.getElementById('analyzerErrorMsg').textContent = '❌ Error: ' + error.message;
+                document.getElementById('analyzerErrorMsg').style.display = 'block';
+            }
+        }
+
+        // Inicializar
+        actualizarPresupuesto();
+    </script>
+</body>
+</html>
