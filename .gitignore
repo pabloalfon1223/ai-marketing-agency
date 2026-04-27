@@ -32,3 +32,36 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Archivos binarios grandes (audio, video, imagenes pesadas) - usar Google Drive / S3
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.webm
+*.ogg
+*.flac
+*.aac
+*.mov
+*.avi
+
+# Imagenes binarias grandes (fotos de clientes, assets de producto)
+# Las imagenes de codigo/UI si pueden entrar
+MENTE-PAUSADA/assets/**/*.jpg
+MENTE-PAUSADA/assets/**/*.jpeg
+MENTE-PAUSADA/assets/**/*.png
+MENTE-PAUSADA/assets/**/*.PNG
+MENTE-PAUSADA/assets/**/*.gif
+MENTE-PAUSADA/assets/**/*.webp
+MENTE-PAUSADA/assets/**/*.avif
+MENTE-PAUSADA/assets/**/*.pdf
+MENTE-PAUSADA/assets/**/*.docx
+MENTE-PAUSADA/assets/**/*.xlsx
+MENTE-PAUSADA/assets/**/*.skp
+POLT-MOBILIER/clientes/*.jpg
+POLT-MOBILIER/clientes/*.jpeg
+POLT-MOBILIER/clientes/*.JPG
+
+# TypeScript build cache
+*.tsbuildinfo
+crm/node_modules/
