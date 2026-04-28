@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/shared/LoadingSpinner';
 import Modal from '../components/shared/Modal';
 import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { wsClient } from '../api/websocket';
 
 interface CommandResult {
   id: string;
@@ -89,7 +90,7 @@ export default function Control() {
   const [results, setResults] = useState<CommandResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [discordEvents, setDiscordEvents] = useState<DiscordEvent[]>([]);
-  const { ws } = useWebSocket();
+  useWebSocket();
 
   const { data: status } = useQuery({
     queryKey: ['system-status'],
@@ -105,29 +106,26 @@ export default function Control() {
 
   // Listen for Discord events via WebSocket
   useEffect(() => {
-    if (!ws) return;
+    wsClient.connect();
 
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'discord_event') {
-          const discordEvent: DiscordEvent = {
-            id: Date.now().toString(),
-            type: data.event_type || 'message',
-            title: data.title || 'Discord Event',
-            description: data.description,
-            timestamp: new Date(),
-          };
-          setDiscordEvents(prev => [discordEvent, ...prev].slice(0, 50));
-        }
-      } catch (e) {
-        // Ignore parse errors
+    const unsub = wsClient.subscribe((data: any) => {
+      if (data.type === 'discord_event') {
+        const discordEvent: DiscordEvent = {
+          id: Date.now().toString(),
+          type: data.event_type || 'message',
+          title: data.title || 'Discord Event',
+          description: data.description,
+          timestamp: new Date(),
+        };
+        setDiscordEvents(prev => [discordEvent, ...prev].slice(0, 50));
       }
-    };
+    });
 
-    ws.addEventListener('message', handleMessage);
-    return () => ws.removeEventListener('message', handleMessage);
-  }, [ws]);
+    return () => {
+      unsub();
+      wsClient.disconnect();
+    };
+  }, []);
 
   const executeMutation = useMutation({
     mutationFn: async (command: string) => {
