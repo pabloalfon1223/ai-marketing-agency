@@ -27,6 +27,7 @@ async def discord_notify(payload: NotifyRequest):
             notify_daily_digest,
             bot,
         )
+        from app.api.websocket import manager
 
         if not bot.is_ready():
             return {"status": "skipped", "reason": "Discord bot no conectado"}
@@ -43,6 +44,13 @@ async def discord_notify(payload: NotifyRequest):
             await notify_daily_digest(payload.descripcion)
         else:
             raise HTTPException(status_code=400, detail=f"Tipo desconocido: {payload.tipo}")
+
+        # Broadcast to web dashboard via WebSocket
+        await manager.broadcast_discord_event(
+            payload.tipo,
+            payload.titulo,
+            payload.descripcion
+        )
 
         return {"status": "ok", "tipo": payload.tipo, "titulo": payload.titulo}
 

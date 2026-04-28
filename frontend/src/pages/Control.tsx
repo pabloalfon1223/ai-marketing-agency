@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Zap, Server, Rocket, Settings, CheckCircle, MessageSquare,
-  Loader, AlertCircle, Copy, X, RefreshCw
+  Loader, AlertCircle, Copy, X, RefreshCw, MessageCircle
 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import Modal from '../components/shared/Modal';
 import api from '../api/client';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 interface CommandResult {
   id: string;
@@ -15,6 +16,14 @@ interface CommandResult {
   status: 'pending' | 'success' | 'error';
   result?: any;
   error?: string;
+  timestamp: Date;
+}
+
+interface DiscordEvent {
+  id: string;
+  type: 'command' | 'message' | 'reaction' | 'status';
+  title: string;
+  description?: string;
   timestamp: Date;
 }
 
@@ -79,12 +88,46 @@ export default function Control() {
   const [commandInput, setCommandInput] = useState('');
   const [results, setResults] = useState<CommandResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [discordEvents, setDiscordEvents] = useState<DiscordEvent[]>([]);
+  const { ws } = useWebSocket();
 
   const { data: status } = useQuery({
     queryKey: ['system-status'],
     queryFn: () => api.get('/health').then(r => r.data),
     refetchInterval: 10000,
   });
+
+  const { data: discordStatus } = useQuery({
+    queryKey: ['discord-status'],
+    queryFn: () => api.get('/discord/status').then(r => r.data),
+    refetchInterval: 15000,
+  });
+
+  // Listen for Discord events via WebSocket
+  useEffect(() => {
+    if (!ws) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'discord_event') {
+          const discordEvent: DiscordEvent = {
+            id: Date.now().toString(),
+            type: data.event_type || 'message',
+            title: data.title || 'Discord Event',
+            description: data.description,
+            timestamp: new Date(),
+          };
+          setDiscordEvents(prev => [discordEvent, ...prev].slice(0, 50));
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    };
+
+    ws.addEventListener('message', handleMessage);
+    return () => ws.removeEventListener('message', handleMessage);
+  }, [ws]);
 
   const executeMutation = useMutation({
     mutationFn: async (command: string) => {
@@ -100,36 +143,58 @@ export default function Control() {
       try {
         let endpoint = '';
         let payload = {};
+        let commandName = '';
 
         switch (command) {
           case 'jefe-status':
             endpoint = '/agents/status';
+            commandName = 'Estado del Sistema';
             break;
           case 'jefe-run':
             endpoint = '/agents/run';
+            commandName = 'Ejecutar Workflow';
             payload = parseInput(commandInput) || { agent_type: 'orchestrator', task_type: 'run_full_campaign' };
             break;
           case 'jefe-dispatch':
             endpoint = '/tasks';
+            commandName = 'Enviar Tareas';
             payload = parseInput(commandInput) || {};
             break;
           case 'jefe-build':
             endpoint = '/content';
+            commandName = 'Construir Contenido';
             payload = parseInput(commandInput) || {};
             break;
           case 'jefe-review':
             endpoint = '/analytics/agents';
+            commandName = 'Revisar Contenido';
             payload = parseInput(commandInput) || {};
             break;
           case 'jefe-ask':
             endpoint = '/agents/run';
+            commandName = 'Hacer Pregunta';
             payload = parseInput(commandInput) || { agent_type: 'orchestrator', task_type: 'run_full_campaign' };
             break;
           default:
             throw new Error('Comando desconocido');
         }
 
+        // Notify Discord about command execution
+        await api.post('/discord/notify', {
+          tipo: 'content',
+          titulo: `🚀 Comando Ejecutado: ${commandName}`,
+          descripcion: `Parámetros: ${JSON.stringify(payload).substring(0, 100)}...`,
+        }).catch(() => {/* Discord not available, continue anyway */});
+
         const response = await api.post(endpoint, payload);
+
+        // Notify Discord about success
+        await api.post('/discord/notify', {
+          tipo: 'content',
+          titulo: `✅ ${commandName} - Exitoso`,
+          descripcion: `Resultado: ${typeof response.data === 'string' ? response.data : JSON.stringify(response.data).substring(0, 100)}`,
+        }).catch(() => {/* Discord not available */});
+
         setResults(prev =>
           prev.map(r =>
             r.id === result.id
@@ -139,6 +204,14 @@ export default function Control() {
         );
       } catch (error: any) {
         const errorMessage = error.response?.data?.detail || error.message;
+
+        // Notify Discord about error
+        await api.post('/discord/notify', {
+          tipo: 'error',
+          titulo: '❌ Error en Ejecución',
+          descripcion: errorMessage,
+        }).catch(() => {/* Discord not available */});
+
         setResults(prev =>
           prev.map(r =>
             r.id === result.id
@@ -180,18 +253,33 @@ export default function Control() {
     <>
       <Header title="Panel de Control" />
       <div className="p-6 space-y-6">
-        {/* System Status Banner */}
-        <div className="bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${status ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-            <div>
-              <p className="text-sm font-semibold text-gray-800">Sistema</p>
-              <p className="text-xs text-gray-600">{status?.service || 'AI Marketing Agency'}</p>
+        {/* System Status Banners */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${status ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Sistema Backend</p>
+                <p className="text-xs text-gray-600">{status?.service || 'AI Marketing Agency'}</p>
+              </div>
             </div>
+            <span className={`text-xs font-medium px-3 py-1 rounded-full ${status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {status ? 'Activo' : 'Offline'}
+            </span>
           </div>
-          <span className={`text-xs font-medium px-3 py-1 rounded-full ${status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {status ? 'Activo' : 'Offline'}
-          </span>
+
+          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${discordStatus?.connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Discord Bot</p>
+                <p className="text-xs text-gray-600">{discordStatus?.user ? `Usuario: ${discordStatus.user}` : 'No conectado'}</p>
+              </div>
+            </div>
+            <span className={`text-xs font-medium px-3 py-1 rounded-full ${discordStatus?.connected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {discordStatus?.connected ? `${discordStatus.guilds || 0} servidores` : 'Offline'}
+            </span>
+          </div>
         </div>
 
         {/* Commands Grid */}
@@ -223,6 +311,41 @@ export default function Control() {
             );
           })}
         </div>
+
+        {/* Discord Events Panel */}
+        {discordEvents.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <MessageCircle size={16} className="text-indigo-600" /> Eventos de Discord
+              </h3>
+              <button
+                onClick={() => setDiscordEvents([])}
+                className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              >
+                <X size={14} /> Limpiar
+              </button>
+            </div>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {discordEvents.map(event => (
+                <div
+                  key={event.id}
+                  className="border border-indigo-100 rounded-lg p-3 bg-indigo-50"
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-xs font-medium text-indigo-700">{event.title}</span>
+                    <span className="text-xs text-gray-500">
+                      {event.timestamp.toLocaleTimeString()}
+                    </span>
+                  </div>
+                  {event.description && (
+                    <p className="text-xs text-gray-600">{event.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Results Panel */}
         {results.length > 0 && (
