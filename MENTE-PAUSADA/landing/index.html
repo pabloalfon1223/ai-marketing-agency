@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruido Mental Cero — Apaga tu mente en 7 noches</title>
+  <meta name="description" content="El protocolo de audio de 7 noches que silencia los pensamientos que no te dejan dormir. Sin meditación, sin experiencia previa. Solo 10 minutos cada noche." />
+  <meta property="og:title" content="Ruido Mental Cero — Apaga tu mente en 7 noches" />
+  <meta property="og:description" content="El protocolo de audio de 7 noches que silencia los pensamientos que no te dejan dormir." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&q=80" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cacao: #1A1816;
+      --cream: #F5EDD8;
+      --gold: #C4A882;
+      --gold-light: #E2D4BC;
+      --text: #2C2A27;
+      --muted: #6B6560;
+      --white: #FFFFFF;
+      --radius: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cacao);
+      color: var(--cream);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 18px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(26, 24, 22, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(196, 168, 130, 0.15);
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold); letter-spacing: 0.5px; }
+    .nav-cta {
+      background: var(--gold); color: var(--cacao);
+      padding: 10px 22px; border-radius: 50px;
+      font-size: 14px; font-weight: 600;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: .85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 100px 24px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(196,168,130,0.08) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(196,168,130,0.12);
+      border: 1px solid rgba(196,168,130,0.3);
+      color: var(--gold); padding: 8px 18px; border-radius: 50px;
+      font-size: 13px; font-weight: 500; margin-bottom: 28px;
+      letter-spacing: 0.3px;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 6vw, 68px);
+      line-height: 1.1;
+      color: var(--cream);
+      max-width: 820px; margin: 0 auto 24px;
+      font-weight: 500;
+    }
+    h1 em { color: var(--gold); font-style: normal; }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: rgba(245,237,216,0.7);
+      max-width: 560px; margin: 0 auto 40px;
+      font-weight: 300; line-height: 1.7;
+    }
+
+    .hero-cta-group { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--gold); color: var(--cacao);
+      padding: 18px 40px; border-radius: 50px;
+      font-size: 17px; font-weight: 700;
+      text-decoration: none; transition: all .2s;
+      box-shadow: 0 8px 32px rgba(196,168,130,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(196,168,130,0.35); }
+    .btn-primary svg { width: 18px; height: 18px; }
+
+    .hero-guarantee {
+      font-size: 13px; color: rgba(245,237,216,0.5);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .hero-guarantee svg { color: var(--gold); }
+
+    /* ── SOCIAL PROOF BAR ── */
+    .proof-bar {
+      background: rgba(196,168,130,0.07);
+      border-top: 1px solid rgba(196,168,130,0.12);
+      border-bottom: 1px solid rgba(196,168,130,0.12);
+      padding: 20px 24px;
+      display: flex; justify-content: center; gap: 48px;
+      flex-wrap: wrap;
+    }
+    .proof-stat { text-align: center; }
+    .proof-stat strong { display: block; font-size: 24px; font-weight: 700; color: var(--gold); }
+    .proof-stat span { font-size: 12px; color: rgba(245,237,216,0.55); letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* ── SECTIONS ── */
+    section { padding: 80px 24px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .section-label {
+      font-size: 12px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 500; line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    h2 em { color: var(--gold); font-style: normal; }
+    .section-desc {
+      font-size: 17px; color: rgba(245,237,216,0.65);
+      max-width: 600px; line-height: 1.75; margin-bottom: 48px;
+    }
+
+    /* ── PAIN SECTION ── */
+    .pain-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px; margin-bottom: 48px;
+    }
+    .pain-card {
+      background: rgba(196,168,130,0.06);
+      border: 1px solid rgba(196,168,130,0.15);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .pain-card .emoji { font-size: 28px; margin-bottom: 12px; display: block; }
+    .pain-card p { font-size: 15px; color: rgba(245,237,216,0.7); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 28px 0;
+      border-bottom: 1px solid rgba(196,168,130,0.1);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(196,168,130,0.12);
+      border: 1px solid rgba(196,168,130,0.3);
+      color: var(--gold); font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .step p { font-size: 15px; color: rgba(245,237,216,0.6); line-height: 1.65; }
+
+    /* ── WHAT YOU GET ── */
+    .nights-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .night-card {
+      background: rgba(196,168,130,0.06);
+      border: 1px solid rgba(196,168,130,0.12);
+      border-radius: 12px; padding: 20px;
+      transition: border-color .2s;
+    }
+    .night-card:hover { border-color: rgba(196,168,130,0.35); }
+    .night-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .night-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .night-card p { font-size: 13px; color: rgba(245,237,216,0.55); line-height: 1.55; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .testimonial {
+      background: rgba(196,168,130,0.06);
+      border: 1px solid rgba(196,168,130,0.15);
+      border-radius: var(--radius); padding: 28px;
+    }
+    .stars { color: var(--gold); font-size: 16px; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial blockquote { font-size: 15px; color: rgba(245,237,216,0.8); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--gold); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: var(--cacao); flex-shrink: 0;
+    }
+    .author-name { font-size: 14px; font-weight: 600; }
+    .author-loc { font-size: 12px; color: rgba(245,237,216,0.45); }
+
+    /* ── PRICING ── */
+    .pricing-box {
+      background: rgba(196,168,130,0.06);
+      border: 1px solid rgba(196,168,130,0.25);
+      border-radius: 24px; padding: 48px;
+      text-align: center; max-width: 520px; margin: 0 auto;
+      position: relative; overflow: hidden;
+    }
+    .pricing-box::before {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 200px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .price-tag { margin: 20px 0 8px; }
+    .price-old { font-size: 18px; color: var(--muted); text-decoration: line-through; margin-right: 8px; }
+    .price-new { font-size: 56px; font-weight: 800; color: var(--gold); line-height: 1; }
+    .price-new sup { font-size: 24px; vertical-align: top; margin-top: 10px; }
+    .price-note { font-size: 14px; color: rgba(245,237,216,0.5); margin-bottom: 32px; }
+
+    .includes { text-align: left; margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px; }
+    .include-item { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; }
+    .include-item svg { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+
+    .btn-buy {
+      display: block; width: 100%;
+      background: var(--gold); color: var(--cacao);
+      padding: 18px 32px; border-radius: 50px;
+      font-size: 18px; font-weight: 700;
+      text-decoration: none; transition: all .2s;
+      box-shadow: 0 8px 32px rgba(196,168,130,0.2);
+      margin-bottom: 16px;
+    }
+    .btn-buy:hover { opacity: .9; transform: translateY(-1px); }
+
+    .guarantee-badge {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 13px; color: rgba(245,237,216,0.55);
+    }
+    .guarantee-badge svg { color: var(--gold); }
+
+    /* ── FAQ ── */
+    .faq { display: flex; flex-direction: column; gap: 0; }
+    .faq-item {
+      border-bottom: 1px solid rgba(196,168,130,0.12);
+      padding: 22px 0;
+    }
+    .faq-q {
+      font-size: 16px; font-weight: 600; margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      cursor: pointer; gap: 16px;
+    }
+    .faq-q svg { flex-shrink: 0; color: var(--gold); margin-top: 2px; }
+    .faq-a { font-size: 15px; color: rgba(245,237,216,0.65); line-height: 1.7; }
+
+    /* ── FINAL CTA ── */
+    .final-cta {
+      text-align: center; padding: 80px 24px 100px;
+      background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(196,168,130,0.08) 0%, transparent 70%);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(196,168,130,0.1);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 13px; color: rgba(245,237,216,0.35);
+    }
+    footer a { color: rgba(245,237,216,0.45); text-decoration: none; }
+
+    /* ── COUNTDOWN ── */
+    .countdown-wrap {
+      background: rgba(196,168,130,0.08);
+      border: 1px solid rgba(196,168,130,0.2);
+      border-radius: 12px; padding: 16px 24px;
+      display: inline-flex; align-items: center; gap: 16px;
+      margin-bottom: 32px; font-size: 14px;
+    }
+    .countdown-label { color: rgba(245,237,216,0.6); }
+    .countdown-timer { font-weight: 700; color: var(--gold); font-size: 18px; letter-spacing: 2px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .proof-bar { gap: 24px; }
+      .pricing-box { padding: 32px 24px; }
+      nav { padding: 14px 16px; }
+      .nav-logo { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">Ruido Mental Cero</span>
+  <a href="https://pay.hotmart.com/D103921572B?checkoutMode=10" class="nav-cta">Obtenerlo — $47</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div style="position:relative; z-index:1; max-width:860px;">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Más de 1.200 personas ya duermen mejor
+    </div>
+    <h1>Tu mente no para.<br>Nosotros la <em>apagamos</em>.</h1>
+    <p class="hero-sub">
+      El protocolo de audio de 7 noches que silencia los pensamientos en espiral. Sin meditación previa. Sin esfuerzo. Solo 10 minutos y una cama.
+    </p>
+    <div class="hero-cta-group">
+      <a href="https://pay.hotmart.com/D103921572B?checkoutMode=10" class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Empezar esta noche — $47
+      </a>
+      <span class="hero-guarantee">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Garantía de 30 días · Acceso inmediato
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF BAR -->
+<div class="proof-bar">
+  <div class="proof-stat">
+    <strong>1.200+</strong>
+    <span>personas que duermen mejor</span>
+  </div>
+  <div class="proof-stat">
+    <strong>7 noches</strong>
+    <span>protocolo completo</span>
+  </div>
+  <div class="proof-stat">
+    <strong>10 min</strong>
+    <span>por noche, nada más</span>
+  </div>
+  <div class="proof-stat">
+    <strong>4.9 / 5</strong>
+    <span>valoración promedio</span>
+  </div>
+</div>
+
+<!-- PAIN -->
+<section>
+  <div class="container">
+    <div class="section-label">El problema que nadie resuelve</div>
+    <h2>Tu cuerpo está cansado.<br><em>Tu mente, no.</em></h2>
+    <p class="section-desc">
+      No es falta de voluntad. No es ansiedad patológica. Es que tu sistema nervioso no sabe cuándo es hora de parar.
+    </p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <span class="emoji">🌀</span>
+        <p>Pensamientos que aparecen justo cuando apagás la luz, repasando todo lo que hiciste y lo que no.</p>
+      </div>
+      <div class="pain-card">
+        <span class="emoji">😮‍💨</span>
+        <p>Te levantás agotado aunque dormiste 8 horas. Como si el sueño no alcanzara a restaurarte.</p>
+      </div>
+      <div class="pain-card">
+        <span class="emoji">📱</span>
+        <p>El teléfono se vuelve un refugio del silencio incómodo de la cama antes de dormir.</p>
+      </div>
+      <div class="pain-card">
+        <span class="emoji">⏰</span>
+        <p>Mirás el reloj a las 2 AM calculando cuántas horas te quedan si dormís ya mismo.</p>
+      </div>
+      <div class="pain-card">
+        <span class="emoji">🧘</span>
+        <p>Intentaste meditar pero no podés "apagar los pensamientos". Nadie te enseñó cómo.</p>
+      </div>
+      <div class="pain-card">
+        <span class="emoji">🔁</span>
+        <p>Cada noche es igual. Y con cada día que pasa, el ciclo se refuerza solo.</p>
+      </div>
+    </div>
+    <p style="font-size:18px; max-width:620px; line-height:1.75; color:rgba(245,237,216,0.8);">
+      Ruido Mental Cero no te pide que dejes de pensar. Te da las herramientas exactas para que tu sistema nervioso <strong style="color:var(--gold)">aprenda a soltar</strong>.
+    </p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section style="background: rgba(196,168,130,0.03); border-top: 1px solid rgba(196,168,130,0.1); border-bottom: 1px solid rgba(196,168,130,0.1);">
+  <div class="container">
+    <div class="section-label">Cómo funciona</div>
+    <h2>Un protocolo de <em>7 noches</em>.<br>Cada una con un propósito.</h2>
+    <p class="section-desc">No es relajación genérica. Es un proceso progresivo diseñado para reprogramar tu respuesta al silencio nocturno.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Bajás a la cama con el audio</h3>
+          <p>Sin auriculares especiales, sin preparación. Ponés play desde tu teléfono o computadora. 10 minutos, y ya.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h3>La voz guía tu atención, no tus pensamientos</h3>
+          <p>Cada audio usa respiración, anclas sensoriales y sugestión narrativa para llevar tu sistema nervioso de "alerta" a "reposo" sin que tengas que "intentarlo".</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Noche a noche, el ruido disminuye</h3>
+          <p>El protocolo está diseñado para que cada sesión refuerce la anterior. Al día 7, muchos reportan que empiezan a quedarse dormidos antes de que termine el audio.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <h3>El cambio se instala solo</h3>
+          <p>No se trata de una "técnica" que tenés que recordar. Se trata de que tu mente aprenda un nuevo camino al descanso — uno que siga funcionando solo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU GET (7 nights) -->
+<section>
+  <div class="container">
+    <div class="section-label">Lo que incluye</div>
+    <h2>7 audios. <em>7 transformaciones.</em></h2>
+    <p class="section-desc">Cada noche trabaja una capa diferente del ruido mental.</p>
+    <div class="nights-grid">
+      <div class="night-card">
+        <div class="night-label">Noche 1</div>
+        <h4>El primer silencio</h4>
+        <p>Aprendés a escuchar sin reaccionar. El ruido todavía está, pero ya no manda.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 2</div>
+        <h4>Respirar diferente</h4>
+        <p>Un patrón de respiración específico que activa el freno del sistema nervioso en menos de 4 minutos.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 3</div>
+        <h4>Soltar el día</h4>
+        <p>Un ritual auditivo para hacer el cierre del día que la mayoría nunca hace consciente.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 4</div>
+        <h4>Anclar el cuerpo</h4>
+        <p>Tu atención vuelve al cuerpo, y el cuerpo sabe qué hacer cuando la mente suelta el control.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 5</div>
+        <h4>Sin agenda</h4>
+        <p>La noche en la que aprendés que no hay nada que resolver en la oscuridad.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 6</div>
+        <h4>El cuerpo primero</h4>
+        <p>Cuando el cuerpo descansa, la mente sigue. Esta noche invertimos el orden habitual.</p>
+      </div>
+      <div class="night-card">
+        <div class="night-label">Noche 7</div>
+        <h4>Ruido Mental Cero</h4>
+        <p>La síntesis. Una noche donde todo lo aprendido converge en el silencio que estabas buscando.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section style="background: rgba(196,168,130,0.03); border-top: 1px solid rgba(196,168,130,0.1); border-bottom: 1px solid rgba(196,168,130,0.1);">
+  <div class="container">
+    <div class="section-label">Lo que dicen quienes lo hicieron</div>
+    <h2>Noches que <em>cambiaron</em>.</h2>
+    <p class="section-desc">Personas que empezaron igual que vos, con la mente acelerada a las 11 PM.</p>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"La tercera noche me quedé dormida antes de que terminara el audio. Hacía meses que no me pasaba. No sé exactamente qué hace, pero algo en cómo está grabado le habla directamente a esa parte de mi cerebro que no para."</blockquote>
+        <div class="testimonial-author">
+          <div class="avatar">V</div>
+          <div>
+            <div class="author-name">Valentina M.</div>
+            <div class="author-loc">Bogotá, Colombia</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Soy muy escéptico con este tipo de cosas. Lo compré más por desesperación que por convicción. Al día 5 le recomendé el protocolo a mi hermano. No esperaba que algo tan simple funcionara tan bien."</blockquote>
+        <div class="testimonial-author">
+          <div class="avatar">D</div>
+          <div>
+            <div class="author-name">Diego R.</div>
+            <div class="author-loc">Ciudad de México</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Empecé a usarlo porque mi hija lo recomendó. A mis 54 años pensé que ya nada cambiaría. Llevaba más de un año sin dormir bien. A partir de la cuarta noche algo se acomodó. Ahora duermo de corrido."</blockquote>
+        <div class="testimonial-author">
+          <div class="avatar">C</div>
+          <div>
+            <div class="author-name">Carmen T.</div>
+            <div class="author-loc">Madrid, España</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section>
+  <div class="container" style="text-align:center;">
+    <div class="section-label">Acceso completo</div>
+    <h2>Una inversión.<br><em>Noches para siempre.</em></h2>
+    <p class="section-desc" style="margin: 0 auto 40px;">Una vez que comprás, los 7 audios son tuyos para siempre. Sin suscripción, sin vencimiento.</p>
+
+    <div class="countdown-wrap">
+      <span class="countdown-label">Precio especial termina en</span>
+      <span class="countdown-timer" id="timer">23:47:32</span>
+    </div>
+
+    <div class="pricing-box">
+      <div class="section-label">Ruido Mental Cero — Protocolo Completo</div>
+      <div class="price-tag">
+        <span class="price-old">$97</span>
+        <span class="price-new"><sup>$</sup>47</span>
+      </div>
+      <p class="price-note">pago único · acceso inmediato · para siempre</p>
+
+      <div class="includes">
+        <div class="include-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>7 audios guiados (uno por noche) — 10 a 15 min c/u</span>
+        </div>
+        <div class="include-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Guía de implementación en PDF</span>
+        </div>
+        <div class="include-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Acceso de por vida — descargá o escuchá online</span>
+        </div>
+        <div class="include-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Bonus: audio de 5 min para el mediodía</span>
+        </div>
+        <div class="include-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Garantía total de 30 días sin preguntas</span>
+        </div>
+      </div>
+
+      <a href="https://pay.hotmart.com/D103921572B?checkoutMode=10" class="btn-buy">
+        Quiero dormir mejor esta noche →
+      </a>
+      <div class="guarantee-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Garantía de devolución 30 días · Sin preguntas
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section style="background: rgba(196,168,130,0.03); border-top: 1px solid rgba(196,168,130,0.1); border-bottom: 1px solid rgba(196,168,130,0.1);">
+  <div class="container">
+    <div class="section-label">Preguntas frecuentes</div>
+    <h2>Lo que todos <em>preguntan</em>.</h2>
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Necesito experiencia en meditación?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">No. De hecho, funciona mejor para personas que nunca meditaron. El protocolo no te pide que "vaciés la mente" — hace el trabajo por vos a través del audio.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Cuándo voy a ver resultados?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">La mayoría nota algo distinto ya en la primera o segunda noche. La profundidad del cambio aumenta con cada sesión. Al día 7, el efecto se consolida.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Y si no funciona para mí?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Tenés 30 días para probarlo. Si completás las 7 noches y no notás ninguna mejora, te devolvemos el dinero completo. Sin formularios, sin demoras.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Necesito auriculares especiales o algún equipo?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">No. Cualquier parlante o auricular funciona. El audio está optimizado para escucharse en volumen bajo, desde el teléfono al lado de la cama.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Es una suscripción?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">No. Pagás una sola vez y los audios son tuyos para siempre. Podés descargarlos o accederlos online cuando quieras.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">
+          ¿Funciona si tengo insomnio crónico?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Este protocolo está diseñado para el ruido mental — pensamientos que no paran, hiperactivación nocturna. Si tenés insomnio clínico diagnosticado, es un complemento, no un sustituto del tratamiento médico.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <div class="section-label">Esta noche puede ser diferente</div>
+    <h2 style="max-width:640px; margin:0 auto 20px;">¿Cuántas noches más vas a<br><em>esperar para descansar?</em></h2>
+    <p style="font-size:17px; color:rgba(245,237,216,0.6); max-width:480px; margin:0 auto 36px; line-height:1.75;">
+      $47. Una sola vez. Y las próximas 7 noches van a empezar a verse distintas.
+    </p>
+    <a href="https://pay.hotmart.com/D103921572B?checkoutMode=10" class="btn-primary" style="font-size:18px; padding:20px 48px;">
+      Empezar esta noche →
+    </a>
+    <p style="margin-top:20px; font-size:13px; color:rgba(245,237,216,0.35);">
+      Acceso inmediato · Garantía 30 días · Pago seguro vía Hotmart
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p style="margin-bottom:8px;">
+    <a href="#">Privacidad</a> &nbsp;·&nbsp; <a href="#">Términos</a> &nbsp;·&nbsp; <a href="mailto:hola@ruidomentalcero.com">Contacto</a>
+  </p>
+  <p>© 2026 Ruido Mental Cero · Mente Pausada</p>
+</footer>
+
+<script>
+  // Countdown timer — se reinicia cada 24hs en localStorage
+  function startCountdown() {
+    const key = 'rmc_countdown_end';
+    let end = localStorage.getItem(key);
+    if (!end || Date.now() > parseInt(end)) {
+      end = Date.now() + (23 * 3600 + 47 * 60 + 32) * 1000;
+      localStorage.setItem(key, end);
+    }
+    function update() {
+      const diff = parseInt(localStorage.getItem(key)) - Date.now();
+      if (diff <= 0) { localStorage.removeItem(key); startCountdown(); return; }
+      const h = Math.floor(diff / 3600000).toString().padStart(2,'0');
+      const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2,'0');
+      const s = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
+      const el = document.getElementById('timer');
+      if (el) el.textContent = `${h}:${m}:${s}`;
+    }
+    update();
+    setInterval(update, 1000);
+  }
+  startCountdown();
+
+  // FAQ toggle (simple)
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const a = q.nextElementSibling;
+      const isOpen = a.style.display === 'block';
+      document.querySelectorAll('.faq-a').forEach(el => el.style.display = 'none');
+      if (!isOpen) a.style.display = 'block';
+    });
+  });
+  // Mostrar primera FAQ abierta por defecto
+  const first = document.querySelector('.faq-a');
+  if (first) first.style.display = 'block';
+</script>
+
+</body>
+</html>
