@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FolderOpen, Megaphone,
-  FileText, Bot, BarChart3, Settings, Target, Package, TrendingUp,
+  FileText, Bot, BarChart3, Settings, Target, Package, TrendingUp, Zap,
 } from 'lucide-react';
 
 const links = [
+  { to: '/control', icon: Zap, label: 'Panel de Control' },
+  { divider: true },
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/clients', icon: Users, label: 'Clientes' },
   { to: '/projects', icon: FolderOpen, label: 'Proyectos' },

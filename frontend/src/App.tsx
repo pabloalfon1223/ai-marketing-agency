@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import Potenciales from './pages/Potenciales';
 import Produccion from './pages/Produccion';
 import Dashboards from './pages/Dashboards';
+import Control from './pages/Control';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/potenciales" element={<Potenciales />} />
             <Route path="/produccion" element={<Produccion />} />
             <Route path="/dashboards" element={<Dashboards />} />
+            <Route path="/control" element={<Control />} />
           </Route>
         </Routes>
       </BrowserRouter>

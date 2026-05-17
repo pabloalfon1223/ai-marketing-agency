@@ -60,6 +60,15 @@ class ConnectionManager:
             "message": message,
         })
 
+    async def broadcast_discord_event(self, event_type: str, title: str, description: str = ""):
+        """Broadcast Discord event to all connected clients."""
+        await self.broadcast({
+            "type": "discord_event",
+            "event_type": event_type,
+            "title": title,
+            "description": description,
+        })
+
 
 # Singleton instance - import this from other modules
 manager = ConnectionManager()

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Marketing Agency · Panel de Control</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+
+    /* Layout */
+    .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 220px; background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px; border-bottom: 1px solid #e2e8f0; }
+    .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: #4f46e5; }
+    .sidebar-brand p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .sidebar nav { flex: 1; padding: 12px; }
+    .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; text-decoration: none; margin-bottom: 2px; }
+    .nav-link:hover { background: #f1f5f9; color: #1e293b; }
+    .nav-link.active { background: #ede9fe; color: #4f46e5; }
+    .nav-divider { border-top: 1px solid #e2e8f0; margin: 8px 0; }
+    .sidebar-footer { padding: 12px 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+    .dot.offline { background: #ef4444; }
+
+    /* Main content */
+    main { margin-left: 220px; padding: 28px; min-height: 100vh; }
+    h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .subtitle { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr; } }
+
+    /* Status banners */
+    .banner { border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+    .banner-backend { background: linear-gradient(to right, #ede9fe, #ddd6fe); border: 1px solid #c4b5fd; }
+    .banner-discord { background: linear-gradient(to right, #e0e7ff, #c7d2fe); border: 1px solid #a5b4fc; }
+    .banner-info { display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.online { background: #22c55e; animation: pulse 2s infinite; }
+    .status-dot.offline { background: #ef4444; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .banner-title { font-size: 13px; font-weight: 600; }
+    .banner-sub { font-size: 11px; color: #475569; margin-top: 1px; }
+    .badge { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 999px; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .badge-red { background: #fee2e2; color: #dc2626; }
+    .badge-gray { background: #f1f5f9; color: #64748b; }
+
+    /* Command cards */
+    .cmd-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; cursor: pointer; transition: all .15s; text-align: left; width: 100%; }
+    .cmd-card:hover { border-color: #a5b4fc; box-shadow: 0 4px 12px rgba(99,102,241,.1); transform: translateY(-1px); }
+    .cmd-card:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .cmd-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 20px; }
+    .cmd-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .cmd-desc { font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4; }
+    .cmd-hint { font-size: 11px; color: #4f46e5; margin-top: 8px; }
+
+    /* Results panel */
+    .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .panel-title { font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; }
+    .btn-clear { font-size: 11px; color: #94a3b8; cursor: pointer; background: none; border: none; display: flex; align-items: center; gap: 4px; }
+    .btn-clear:hover { color: #475569; }
+    .results-list { max-height: 320px; overflow-y: auto; space-y: 10px; }
+    .result-item { border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .result-pending { background: #fefce8; border: 1px solid #fef08a; }
+    .result-success { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .result-error { background: #fef2f2; border: 1px solid #fecaca; }
+    .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .result-cmd { font-size: 12px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; }
+    .result-time { font-size: 11px; color: #94a3b8; }
+    pre.result-data { font-size: 11px; background: #0f172a; color: #4ade80; padding: 8px; border-radius: 6px; overflow-x: auto; max-height: 100px; position: relative; }
+    .copy-btn { position: absolute; top: 6px; right: 6px; background: #1e293b; border: none; color: #94a3b8; cursor: pointer; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+    .copy-btn:hover { color: #fff; }
+    .result-error-msg { font-size: 11px; font-family: monospace; color: #dc2626; }
+
+    /* Discord events */
+    .discord-event { border: 1px solid #c7d2fe; background: #eef2ff; border-radius: 8px; padding: 10px; margin-bottom: 6px; }
+    .discord-event-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .discord-event-title { font-size: 12px; font-weight: 600; color: #4338ca; }
+    .discord-event-time { font-size: 11px; color: #94a3b8; }
+    .discord-event-desc { font-size: 11px; color: #475569; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal-box { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+    textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; font-size: 12px; font-family: monospace; resize: vertical; outline: none; }
+    textarea:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79,70,229,.2); }
+    .hint-text { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .btn { font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-secondary { background: transparent; color: #64748b; }
+    .btn-secondary:hover { color: #1e293b; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    .empty-state { font-size: 12px; color: #94a3b8; text-align: center; padding: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <h1>AI Marketing</h1>
+    <p>Agency Platform</p>
+  </div>
+  <nav>
+    <a class="nav-link active" onclick="showSection('control')">⚡ Panel de Control</a>
+    <div class="nav-divider"></div>
+    <a class="nav-link" href="http://localhost:5173/" target="_blank">📊 Dashboard</a>
+    <a class="nav-link" href="http://localhost:5173/agents" target="_blank">🤖 Agentes IA</a>
+    <a class="nav-link" href="http://localhost:5173/clients" target="_blank">👥 Clientes</a>
+    <a class="nav-link" href="http://localhost:5173/content" target="_blank">📄 Contenido</a>
+    <div class="nav-divider"></div>
+    <a class="nav-link" href="http://localhost:5173/potenciales" target="_blank">🎯 Potenciales</a>
+    <a class="nav-link" href="http://localhost:5173/produccion" target="_blank">📦 Producción</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="dot" id="dot-backend"></div>
+    <span id="footer-status">Verificando...</span>
+  </div>
+</div>
+
+<!-- Main -->
+<main>
+  <h2>Panel de Control</h2>
+  <p class="subtitle" style="margin-bottom:20px">Ejecutá comandos y monitoreá el sistema desde acá. Los eventos se sincronizan con Discord.</p>
+
+  <!-- Status banners -->
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="banner banner-backend">
+      <div class="banner-info">
+        <div class="status-dot offline" id="dot-system"></div>
+        <div>
+          <div class="banner-title">Sistema Backend</div>
+          <div class="banner-sub" id="backend-label">Verificando...</div>
+        </div>
+      </div>
+      <span class="badge badge-gray" id="backend-badge">—</span>
+    </div>
+    <div class="banner banner-discord">
+      <div class="banner-info">
+        <div class="status-dot offline" id="dot-discord"></div>
+        <div>
+          <div class="banner-title">Discord Bot</div>
+          <div class="banner-sub" id="discord-label">Verificando...</div>
+        </div>
+      </div>
+      <span class="badge badge-gray" id="discord-badge">—</span>
+    </div>
+  </div>
+
+  <!-- Commands -->
+  <div class="grid-3">
+    <button class="cmd-card" onclick="runCommand('jefe-status')">
+      <div class="cmd-icon" style="background:#dbeafe">🖥️</div>
+      <div class="cmd-name">Estado del Sistema</div>
+      <div class="cmd-desc">Ver estado de todos los agentes y tareas activas</div>
+    </button>
+    <button class="cmd-card" onclick="openModal('jefe-run')">
+      <div class="cmd-icon" style="background:#dcfce7">🚀</div>
+      <div class="cmd-name">Ejecutar Workflow</div>
+      <div class="cmd-desc">Ejecutar un flujo de trabajo completo</div>
+      <div class="cmd-hint">Requiere parámetros →</div>
+    </button>
+    <button class="cmd-card" onclick="openModal('jefe-dispatch')">
+      <div class="cmd-icon" style="background:#fef9c3">⚡</div>
+      <div class="cmd-name">Enviar Tareas</div>
+      <div class="cmd-desc">Distribuir tareas a los agentes</div>
+      <div class="cmd-hint">Requiere parámetros →</div>
+    </button>
+    <button class="cmd-card" onclick="openModal('jefe-build')">
+      <div class="cmd-icon" style="background:#f3e8ff">🔨</div>
+      <div class="cmd-name">Construir Contenido</div>
+      <div class="cmd-desc">Generar nuevo contenido con los agentes IA</div>
+      <div class="cmd-hint">Requiere parámetros →</div>
+    </button>
+    <button class="cmd-card" onclick="runCommand('jefe-review')">
+      <div class="cmd-icon" style="background:#ffedd5">✅</div>
+      <div class="cmd-name">Revisar Contenido</div>
+      <div class="cmd-desc">Revisar y analizar el contenido existente</div>
+    </button>
+    <button class="cmd-card" onclick="openModal('jefe-ask')">
+      <div class="cmd-icon" style="background:#e0e7ff">💬</div>
+      <div class="cmd-name">Hacer Pregunta</div>
+      <div class="cmd-desc">Consultar a los agentes sobre algo específico</div>
+      <div class="cmd-hint">Requiere parámetros →</div>
+    </button>
+  </div>
+
+  <!-- Discord events -->
+  <div class="panel" id="discord-panel" style="display:none">
+    <div class="panel-header">
+      <div class="panel-title">🟣 Eventos de Discord (en tiempo real)</div>
+      <button class="btn-clear" onclick="clearDiscord()">✕ Limpiar</button>
+    </div>
+    <div id="discord-events" class="results-list"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel" id="results-panel" style="display:none">
+    <div class="panel-header">
+      <div class="panel-title">📋 Historial de Comandos</div>
+      <button class="btn-clear" onclick="clearResults()">✕ Limpiar</button>
+    </div>
+    <div id="results-list" class="results-list"></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title">Parámetros</div>
+    <label>Parámetros JSON</label>
+    <textarea id="modal-input" rows="7" placeholder='{
+  "agent_type": "content",
+  "task_type": "generate_blog_post",
+  "input_data": "Crea contenido para..."
+}'></textarea>
+    <div class="hint-text">Dejá vacío para usar parámetros por defecto.</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModalDirect()">Cancelar</button>
+      <button class="btn btn-primary" id="modal-submit-btn" onclick="submitModal()">⚡ Ejecutar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000/api/v1';
+  let activeCommand = null;
+  let ws = null;
+
+  const ENDPOINTS = {
+    'jefe-status':  { method:'GET',  url:`${API}/agents/status`,    name:'Estado del Sistema' },
+    'jefe-run':     { method:'POST', url:`${API}/agents/run`,        name:'Ejecutar Workflow',    default:{ agent_type:'orchestrator', task_type:'run_full_campaign' } },
+    'jefe-dispatch':{ method:'GET',  url:`${API}/tasks`,             name:'Enviar Tareas' },
+    'jefe-build':   { method:'GET',  url:`${API}/content`,           name:'Construir Contenido' },
+    'jefe-review':  { method:'GET',  url:`${API}/analytics/agents`,  name:'Revisar Contenido' },
+    'jefe-ask':     { method:'POST', url:`${API}/agents/run`,        name:'Hacer Pregunta',       default:{ agent_type:'orchestrator', task_type:'run_full_campaign' } },
+  };
+
+  // ── Status polling ───────────────────────────────────────
+  async function checkStatus() {
+    try {
+      const r = await fetch(`${API}/health`);
+      const d = await r.json();
+      document.getElementById('dot-system').className = 'status-dot online';
+      document.getElementById('backend-label').textContent = d.service || 'AI Marketing Agency';
+      document.getElementById('backend-badge').textContent = 'Activo';
+      document.getElementById('backend-badge').className = 'badge badge-green';
+      document.getElementById('dot-backend').className = 'dot';
+      document.getElementById('footer-status').textContent = 'Sistema activo';
+    } catch {
+      document.getElementById('dot-system').className = 'status-dot offline';
+      document.getElementById('backend-label').textContent = 'No responde';
+      document.getElementById('backend-badge').textContent = 'Offline';
+      document.getElementById('backend-badge').className = 'badge badge-red';
+      document.getElementById('dot-backend').className = 'dot offline';
+      document.getElementById('footer-status').textContent = 'Backend offline';
+    }
+
+    try {
+      const r = await fetch(`${API}/discord/status`);
+      const d = await r.json();
+      document.getElementById('dot-discord').className = d.connected ? 'status-dot online' : 'status-dot offline';
+      document.getElementById('discord-label').textContent = d.connected ? `Usuario: ${d.user}` : 'Bot no conectado';
+      document.getElementById('discord-badge').textContent = d.connected ? `${d.guilds || 0} servidores` : 'Offline';
+      document.getElementById('discord-badge').className = d.connected ? 'badge badge-green' : 'badge badge-red';
+    } catch {
+      document.getElementById('dot-discord').className = 'status-dot offline';
+      document.getElementById('discord-label').textContent = 'Configura DISCORD_BOT_TOKEN en .env';
+      document.getElementById('discord-badge').textContent = 'No configurado';
+      document.getElementById('discord-badge').className = 'badge badge-gray';
+    }
+  }
+
+  checkStatus();
+  setInterval(checkStatus, 12000);
+
+  // ── WebSocket ───────────────────────────────────────────
+  function connectWS() {
+    try {
+      ws = new WebSocket('ws://localhost:8000/ws/updates');
+      ws.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === 'discord_event') addDiscordEvent(data);
+        } catch {}
+      };
+      ws.onclose = () => setTimeout(connectWS, 3000);
+      ws.onerror  = () => {};
+    } catch {}
+  }
+  connectWS();
+
+  // ── Discord events ───────────────────────────────────────
+  function addDiscordEvent(data) {
+    const panel = document.getElementById('discord-panel');
+    const list  = document.getElementById('discord-events');
+    panel.style.display = '';
+    const el = document.createElement('div');
+    el.className = 'discord-event';
+    el.innerHTML = `
+      <div class="discord-event-header">
+        <span class="discord-event-title">${escHtml(data.title || 'Evento Discord')}</span>
+        <span class="discord-event-time">${new Date().toLocaleTimeString()}</span>
+      </div>
+      ${data.description ? `<div class="discord-event-desc">${escHtml(data.description)}</div>` : ''}
+    `;
+    list.insertBefore(el, list.firstChild);
+    if (list.children.length > 50) list.removeChild(list.lastChild);
+  }
+
+  function clearDiscord() {
+    document.getElementById('discord-events').innerHTML = '';
+    document.getElementById('discord-panel').style.display = 'none';
+  }
+
+  // ── Run command ──────────────────────────────────────────
+  async function runCommand(command, payload) {
+    const def = ENDPOINTS[command];
+    if (!def) return;
+
+    const id = Date.now().toString();
+    addResult(id, def.name, 'pending');
+
+    try {
+      // Notify Discord: start
+      silentNotify('content', `🚀 ${def.name}`, 'Ejecutando desde Panel Web...');
+
+      let response;
+      if (def.method === 'GET') {
+        response = await fetch(def.url);
+      } else {
+        const body = payload || def.default || {};
+        response = await fetch(def.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.detail || `Error ${response.status}`);
+
+      updateResult(id, 'success', data);
+
+      // Notify Discord: success
+      const preview = JSON.stringify(data).substring(0, 120);
+      silentNotify('content', `✅ ${def.name} — Exitoso`, preview);
+    } catch (err) {
+      updateResult(id, 'error', null, err.message);
+      silentNotify('error', `❌ ${def.name} — Error`, err.message);
+    }
+  }
+
+  async function silentNotify(tipo, titulo, descripcion) {
+    try {
+      await fetch(`${API}/discord/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo, titulo, descripcion: descripcion || '' }),
+      });
+    } catch {}
+  }
+
+  // ── Results ──────────────────────────────────────────────
+  function addResult(id, name, status) {
+    const panel = document.getElementById('results-panel');
+    const list  = document.getElementById('results-list');
+    panel.style.display = '';
+    const el = document.createElement('div');
+    el.id = `result-${id}`;
+    el.className = `result-item result-${status}`;
+    el.innerHTML = `
+      <div class="result-header">
+        <div class="result-cmd">${statusIcon(status)} ${escHtml(name)}</div>
+        <span class="result-time">${new Date().toLocaleTimeString()}</span>
+      </div>
+      <div class="result-body"></div>
+    `;
+    list.insertBefore(el, list.firstChild);
+  }
+
+  function updateResult(id, status, data, errorMsg) {
+    const el = document.getElementById(`result-${id}`);
+    if (!el) return;
+    el.className = `result-item result-${status}`;
+    el.querySelector('.result-cmd').innerHTML = `${statusIcon(status)} ${el.querySelector('.result-cmd').textContent.trim().replace(/^[^ ]+ /,'')}`;
+    const body = el.querySelector('.result-body');
+    if (data) {
+      const uid = `copy-${id}`;
+      body.innerHTML = `<div style="position:relative"><pre class="result-data">${escHtml(JSON.stringify(data, null, 2))}</pre><button class="copy-btn" id="${uid}" onclick="copyData('${uid}', this)">Copiar</button></div>`;
+    }
+    if (errorMsg) {
+      body.innerHTML = `<div class="result-error-msg">${escHtml(errorMsg)}</div>`;
+    }
+  }
+
+  function copyData(uid, btn) {
+    const pre = btn.previousElementSibling;
+    navigator.clipboard.writeText(pre.textContent);
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  }
+
+  function clearResults() {
+    document.getElementById('results-list').innerHTML = '';
+    document.getElementById('results-panel').style.display = 'none';
+  }
+
+  function statusIcon(s) {
+    return s === 'pending' ? '<span class="spin">⟳</span>' : s === 'success' ? '✅' : '❌';
+  }
+
+  // ── Modal ────────────────────────────────────────────────
+  const MODAL_NAMES = {
+    'jefe-run': 'Ejecutar Workflow',
+    'jefe-dispatch': 'Enviar Tareas',
+    'jefe-build': 'Construir Contenido',
+    'jefe-ask': 'Hacer Pregunta',
+  };
+
+  function openModal(command) {
+    activeCommand = command;
+    document.getElementById('modal-title').textContent = MODAL_NAMES[command] || 'Comando';
+    document.getElementById('modal-input').value = '';
+    document.getElementById('modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('modal-input').focus(), 50);
+  }
+
+  function closeModal(e) { if (e.target.id === 'modal') closeModalDirect(); }
+  function closeModalDirect() { document.getElementById('modal').style.display = 'none'; activeCommand = null; }
+
+  function submitModal() {
+    if (!activeCommand) return;
+    const raw = document.getElementById('modal-input').value.trim();
+    let payload = null;
+    if (raw) {
+      try { payload = JSON.parse(raw); }
+      catch { payload = { input_data: raw }; }
+    }
+    closeModalDirect();
+    runCommand(activeCommand, payload);
+  }
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+  function escHtml(s) {
+    if (typeof s !== 'string') s = JSON.stringify(s);
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
